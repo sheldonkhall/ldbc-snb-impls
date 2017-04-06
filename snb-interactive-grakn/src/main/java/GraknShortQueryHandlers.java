@@ -21,6 +21,7 @@ public class GraknShortQueryHandlers {
     public static class LdbcShortQuery1PersonProfileHandler
             implements OperationHandler<LdbcShortQuery1PersonProfile, GraknDbConnectionState>
     {
+
         @Override
         public void executeOperation(LdbcShortQuery1PersonProfile operation,
                                      GraknDbConnectionState dbConnectionState,
