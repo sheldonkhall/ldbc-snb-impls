@@ -17,6 +17,7 @@
     <module>snb-interactive-neo4j</module>
     <module>snb-interactive-titan</module>
     <module>snb-interactive-torc</module>
+    <module>snb-interactive-grakn</module>
   </modules>
   <dependencies>
     <dependency>
