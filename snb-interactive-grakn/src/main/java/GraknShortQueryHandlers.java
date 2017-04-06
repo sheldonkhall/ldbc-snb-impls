@@ -1,4 +1,4 @@
-import com.ldbc.driver.DbConnectionState;
+import ai.grakn.GraknSession;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
 import com.ldbc.driver.ResultReporter;
@@ -6,18 +6,21 @@ import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcShortQuery1PersonProfi
 
 /**
  * Created by miko on 06/04/2017.
+ * Ruined by felix on 06/04/2017.
  */
 
 
 public class GraknShortQueryHandlers {
-    public static class GraknLdbcShortQuery1PersonProfileHandler
-            implements OperationHandler<LdbcShortQuery1PersonProfile, DbConnectionState>
+    public static class LdbcShortQuery1PersonProfileHandler
+            implements OperationHandler<LdbcShortQuery1PersonProfile, GraknDbConnectionState>
     {
         @Override
         public void executeOperation(LdbcShortQuery1PersonProfile operation,
-                                     DbConnectionState dbConnectionState,
+                                     GraknDbConnectionState dbConnectionState,
                                      ResultReporter resultReporter) throws DbException
-        {}
+        {
+            GraknSession session = dbConnectionState.session();
+        }
     }
 }
 
