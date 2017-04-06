@@ -5,8 +5,7 @@ import ai.grakn.graql.MatchQuery;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
 import com.ldbc.driver.ResultReporter;
-import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcShortQuery1PersonProfile;
-import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcShortQuery1PersonProfileResult;
+import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
 
 import java.util.List;
 import java.util.Map;
@@ -18,21 +17,20 @@ import java.util.Map;
 
 
 public class GraknShortQueryHandlers {
+
     public static class LdbcShortQuery1PersonProfileHandler
-            implements OperationHandler<LdbcShortQuery1PersonProfile, GraknDbConnectionState>
-    {
+            implements OperationHandler<LdbcShortQuery1PersonProfile, GraknDbConnectionState> {
 
         @Override
         public void executeOperation(LdbcShortQuery1PersonProfile operation,
                                      GraknDbConnectionState dbConnectionState,
-                                     ResultReporter resultReporter) throws DbException
-        {
+                                     ResultReporter resultReporter) throws DbException {
             GraknGraph graph = dbConnectionState.graph();
 
             String query =
                     "match" +
                             "$person isa person has ID " +
-                            "'" + operation.personId() + "' " +
+                            operation.personId() +
                             "has first-name $first-name" +
                             "has last-name $last-name" +
                             "has birth-day $birthday" +
@@ -55,12 +53,81 @@ public class GraknShortQueryHandlers {
                                 (String) fres.get("browser-used").asResource().getValue(),
                                 (Long) fres.get("placeID").asResource().getValue(),
                                 (String) fres.get("gender").asResource().getValue(),
-                                (Long) fres.get("creation-date").asResource().getValue() );
+                                (Long) fres.get("creation-date").asResource().getValue());
 
                 resultReporter.report(0, result, operation);
+
             } else {
                 resultReporter.report(0, null, operation);
             }
+        }
+    }
+
+    public static class LdbsShortQuery4MessageContentHandler implements
+            OperationHandler<LdbcShortQuery4MessageContent, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcShortQuery4MessageContent operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter resultReporter) throws DbException {
+            GraknGraph graph = dbConnectionState.graph();
+
+            String query = "match" +
+                    "$m isa message has ID " + operation.messageId() + ";" +
+                    "$m has creation-date $date has content $content;";
+
+            List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+
+            if (results.size() > 0) {
+                Map<String, Concept> fres = results.get(0);
+                LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
+                        (String) fres.get("content").asResource().getValue(),
+                        (Long) fres.get("creation-date").asResource().getValue()
+                );
+
+                resultReporter.report(0, result, operation);
+
+            } else {
+                resultReporter.report(0, null, operation);
+
+            }
+
+        }
+
+
+    }
+
+    public static class LdbcShortQuery5MessageCreatorHandler implements
+            OperationHandler<LdbcShortQuery5MessageCreator, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcShortQuery5MessageCreator operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter resultReporter) throws DbException {
+            GraknGraph graph = dbConnectionState.graph();
+
+            String query = "match" +
+                    "$m isa message has ID " + operation.messageId() + ";" +
+                    "($m , $person) isa has-creator;" +
+                    "$person has first-name $fname has last-name $lname has ID $pID;";
+
+            List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+
+            if (results.size() > 0) {
+                Map<String, Concept> fres = results.get(0);
+                LdbcShortQuery5MessageCreatorResult result = new LdbcShortQuery5MessageCreatorResult(
+                        (Long) fres.get("pID").asResource().getValue(),
+                        (String) fres.get("fname").asResource().getValue(),
+                        (String) fres.get("lname").asResource().getValue()
+                );
+
+                resultReporter.report(0, result, operation);
+
+            } else {
+                resultReporter.report(0, null, operation);
+
+            }
+
         }
     }
 }
