@@ -23,6 +23,30 @@ import java.util.TimeZone;
 
 public class GraknShortQueryHandlers {
 
+    // TODO Move the data conversion somewhere smarter
+
+    public static long dateStringToLong(String date, boolean withTime) {
+        SimpleDateFormat f;
+
+        if (withTime) {
+            f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        }
+        else {
+            f = new SimpleDateFormat("yyyy-MM-dd");
+        }
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+
+        Long convertedDate = null;
+
+        try { convertedDate =
+                f.parse(date).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return convertedDate;
+    }
+
     public static class LdbcShortQuery1PersonProfileHandler
             implements OperationHandler<LdbcShortQuery1PersonProfile, GraknDbConnectionState> {
 
@@ -49,31 +73,17 @@ public class GraknShortQueryHandlers {
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
             if (results.size() > 0) {
                 Map<String, Concept> fres = results.get(0);
-                Long creationDate = 0L;
-                Long birthDay = 0L;
-
-                //TODO MOVE THIS SOMEWHERE SMARTER
-                String date = (String) fres.get("creation-date").asResource().getValue();
-                String date2 = (String) fres.get("birthday").asResource().getValue();
-                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-                f.setTimeZone(TimeZone.getTimeZone("GMT"));
-                try { creationDate =
-                    f.parse(date).getTime();
-                    birthDay = f.parse(date2).getTime();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
 
                 LdbcShortQuery1PersonProfileResult result =
                         new LdbcShortQuery1PersonProfileResult(
                                 (String) fres.get("first-name").asResource().getValue(),
                                 (String) fres.get("last-name").asResource().getValue(),
-                                birthDay,
+                                dateStringToLong((String) fres.get("birthday").asResource().getValue(), false),
                                 (String) fres.get("location-ip").asResource().getValue(),
                                 (String) fres.get("browser-used").asResource().getValue(),
                                 (Long) fres.get("placeID").asResource().getValue(),
                                 (String) fres.get("gender").asResource().getValue(),
-                                creationDate);
+                                dateStringToLong((String) fres.get("creation-date").asResource().getValue(), true));
 
                 resultReporter.report(0, result, operation);
 
@@ -102,7 +112,7 @@ public class GraknShortQueryHandlers {
                 Map<String, Concept> fres = results.get(0);
                 LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
                         (String) fres.get("content").asResource().getValue(),
-                        (Long) fres.get("creation-date").asResource().getValue()
+                        dateStringToLong((String) fres.get("creation-date").asResource().getValue(), true)
                 );
 
                 resultReporter.report(0, result, operation);
