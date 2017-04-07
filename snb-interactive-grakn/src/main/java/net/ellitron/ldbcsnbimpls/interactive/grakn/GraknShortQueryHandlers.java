@@ -93,7 +93,7 @@ public class GraknShortQueryHandlers {
         }
     }
 
-    public static class LdbsShortQuery4MessageContentHandler implements
+    public static class LdbcShortQuery4MessageContentHandler implements
             OperationHandler<LdbcShortQuery4MessageContent, GraknDbConnectionState> {
 
         @Override
@@ -103,7 +103,7 @@ public class GraknShortQueryHandlers {
             GraknGraph graph = dbConnectionState.graph();
 
             String query = "match" +
-                    "$m isa message has message-id '" + operation.messageId() + "';" +
+                    "$m isa message has message-id " + operation.messageId() + ";" +
                     "$m has creation-date $date has content $content;";
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
@@ -112,7 +112,7 @@ public class GraknShortQueryHandlers {
                 Map<String, Concept> fres = results.get(0);
                 LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
                         (String) fres.get("content").asResource().getValue(),
-                        dateStringToLong((String) fres.get("creation-date").asResource().getValue(), true)
+                        dateStringToLong((String) fres.get("date").asResource().getValue(), true)
                 );
 
                 resultReporter.report(0, result, operation);
@@ -136,10 +136,10 @@ public class GraknShortQueryHandlers {
                                      ResultReporter resultReporter) throws DbException {
             GraknGraph graph = dbConnectionState.graph();
 
-            String query = "match" +
-                    "$m isa message has message-id '" + operation.messageId() + "';" +
-                    "(creator: $m , product: $person) isa has-creator;" +
-                    "$person has first-name $fname has last-name $lname has person-id $pID;";
+            String query = "match " +
+                    " $m isa message has message-id " + operation.messageId() + ";" +
+                    " (product: $m , creator: $person) isa has-creator;" +
+                    " $person has first-name $fname has last-name $lname has person-id $pID;";
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
