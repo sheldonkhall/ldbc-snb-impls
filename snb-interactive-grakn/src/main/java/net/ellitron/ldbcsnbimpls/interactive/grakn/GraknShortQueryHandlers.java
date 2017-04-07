@@ -9,8 +9,11 @@ import com.ldbc.driver.OperationHandler;
 import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Created by miko on 06/04/2017.
@@ -34,28 +37,43 @@ public class GraknShortQueryHandlers {
                             "$person isa person has person-id '" +
                             operation.personId() +
                             "' has first-name $first-name" +
-                            "has last-name $last-name" +
-                            "has birth-day $birthday" +
-                            "has location-ip $location-ip" +
-                            "has browser-used $browser-used" +
-                            "has gender $gender" +
-                            "has creation-date $creation-date;" +
-                            "(located: $person, region: $place) isa is-located-in;" +
-                            "$place has place-id $placeID";
+                            " has last-name $last-name" +
+                            " has birth-day $birthday" +
+                            " has location-ip $location-ip" +
+                            " has browser-used $browser-used" +
+                            " has gender $gender" +
+                            " has creation-date $creation-date;" +
+                            " (located: $person, region: $place) isa is-located-in;" +
+                            " $place has place-id $placeID;";
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
             if (results.size() > 0) {
                 Map<String, Concept> fres = results.get(0);
+                Long creationDate = 0L;
+                Long birthDay = 0L;
+
+                //TODO MOVE THIS SOMEWHERE SMARTER
+                String date = (String) fres.get("creation-date").asResource().getValue();
+                String date2 = (String) fres.get("birthday").asResource().getValue();
+                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+                f.setTimeZone(TimeZone.getTimeZone("GMT"));
+                try { creationDate =
+                    f.parse(date).getTime();
+                    birthDay = f.parse(date2).getTime();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
                 LdbcShortQuery1PersonProfileResult result =
                         new LdbcShortQuery1PersonProfileResult(
                                 (String) fres.get("first-name").asResource().getValue(),
                                 (String) fres.get("last-name").asResource().getValue(),
-                                (Long) fres.get("birthday").asResource().getValue(),
+                                birthDay,
                                 (String) fres.get("location-ip").asResource().getValue(),
                                 (String) fres.get("browser-used").asResource().getValue(),
                                 (Long) fres.get("placeID").asResource().getValue(),
                                 (String) fres.get("gender").asResource().getValue(),
-                                (Long) fres.get("creation-date").asResource().getValue());
+                                creationDate);
 
                 resultReporter.report(0, result, operation);
 
