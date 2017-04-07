@@ -160,5 +160,59 @@ public class GraknShortQueryHandlers {
 
         }
     }
+
+
+    // TODO: The following requires a rule to properly work
+    public static class LdbcShortQuery6MessageForumHandler implements
+            OperationHandler<LdbcShortQuery6MessageForum, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcShortQuery6MessageForum operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter resultReporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            String query = "match " +
+                    "$m isa message has message-id " + operation.messageId() + "; " +
+                    "(contained: $m , container: $forum) isa container-of;" +
+                    "$forum has forum-id $fid, has title $title; " +
+                    "(moderated: $forum, moderator: $mod) isa has-moderator; " +
+                    "$mod has person-id $modid, has first-name $fname, has last-name $lname;";
+
+            List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+
+            if (results.size() > 0) {
+                Map<String, Concept> fres = results.get(0);
+                LdbcShortQuery6MessageForumResult result = new LdbcShortQuery6MessageForumResult(
+                        (Long) fres.get("fid").asResource().getValue(),
+                        (String) fres.get("title").asResource().getValue(),
+                        (Long) fres.get("modid").asResource().getValue(),
+                        (String) fres.get("fname").asResource().getValue(),
+                        (String) fres.get("lname").asResource().getValue()
+                );
+
+                resultReporter.report(0, result, operation);
+
+            } else {
+                resultReporter.report(0, null, operation);
+
+            }
+
+        }
+
+        }
+
+    /*
+    public static class LdbcShortQuery7MessageRepliesHandler implements
+            OperationHandler<LdbcShortQuery7MessageReplies, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcShortQuery7MessageReplies operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter resultReporter) throws DbException {
+
+        }
+    }*/
 }
 
