@@ -121,18 +121,24 @@ public class GraknShortQueryHandlers {
             String query = "match " +
                     "$person isa person has person-id " +  operation.personId() + "; " +
                     "($person, $friend) isa knows has creation-date $date; " +
-                    "$friend has person-id $friendId has first-name $fname has last-name $lname; " +
-                    "order by desc $date $id;";
+                    "$friend has person-id $friendId has first-name $fname has last-name $lname; ";
+
+            System.out.println(query);
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
             if (results.size() > 0) {
                 Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true))
                        .thenComparingLong(map -> resource(map, "friendId"));
+
                 List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
                         .sorted(ugly)
-                        .map(map -> new LdbcShortQuery3PersonFriendsResult(resource(map, "friendId"), resource(map, "fname"), resource(map, "lname"), dateStringToLong(resource(map, "date"), true)))
+                        .map(map -> new LdbcShortQuery3PersonFriendsResult(resource(map, "friendId"),
+                                resource(map, "fname"),
+                                resource(map, "lname"),
+                                dateStringToLong(resource(map, "date"), true)))
                         .collect(Collectors.toList());
+
                 resultReporter.report(0, result, operation);
             } else {
                 resultReporter.report(0, null, operation);
