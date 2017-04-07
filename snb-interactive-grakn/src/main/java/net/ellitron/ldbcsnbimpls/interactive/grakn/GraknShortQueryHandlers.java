@@ -1,3 +1,5 @@
+package net.ellitron.ldbcsnbimpls.interactive.grakn;
+
 import ai.grakn.GraknGraph;
 
 import ai.grakn.concept.Concept;
@@ -29,17 +31,17 @@ public class GraknShortQueryHandlers {
 
             String query =
                     "match" +
-                            "$person isa person has ID " +
+                            "$person isa person has person-id '" +
                             operation.personId() +
-                            "has first-name $first-name" +
+                            "' has first-name $first-name" +
                             "has last-name $last-name" +
                             "has birth-day $birthday" +
                             "has location-ip $location-ip" +
                             "has browser-used $browser-used" +
                             "has gender $gender" +
                             "has creation-date $creation-date;" +
-                            "($person, $place) isa located-in;" +
-                            "$place has ID $placeID";
+                            "(located: $person, region: $place) isa is-located-in;" +
+                            "$place has place-id $placeID";
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
             if (results.size() > 0) {
@@ -73,7 +75,7 @@ public class GraknShortQueryHandlers {
             GraknGraph graph = dbConnectionState.graph();
 
             String query = "match" +
-                    "$m isa message has ID " + operation.messageId() + ";" +
+                    "$m isa message has message-id '" + operation.messageId() + "';" +
                     "$m has creation-date $date has content $content;";
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
@@ -107,9 +109,9 @@ public class GraknShortQueryHandlers {
             GraknGraph graph = dbConnectionState.graph();
 
             String query = "match" +
-                    "$m isa message has ID " + operation.messageId() + ";" +
-                    "($m , $person) isa has-creator;" +
-                    "$person has first-name $fname has last-name $lname has ID $pID;";
+                    "$m isa message has message-id '" + operation.messageId() + "';" +
+                    "(creator: $m , product: $person) isa has-creator;" +
+                    "$person has first-name $fname has last-name $lname has person-id $pID;";
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 

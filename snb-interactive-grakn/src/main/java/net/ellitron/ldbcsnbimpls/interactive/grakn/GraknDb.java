@@ -1,5 +1,5 @@
-import ai.grakn.Grakn;
-import ai.grakn.GraknSession;
+package net.ellitron.ldbcsnbimpls.interactive.grakn;
+
 import com.ldbc.driver.Db;
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
@@ -18,8 +18,7 @@ public class GraknDb extends Db {
 
     @Override
     protected void onInit(Map<String, String> properties, LoggingService loggingService) throws DbException {
-        GraknSession session = Grakn.session(properties.get("uri"), properties.get("keyspace"));
-        connectionState = new GraknDbConnectionState(session);
+        connectionState = new GraknDbConnectionState(properties);
 
         registerOperationHandler(LdbcShortQuery1PersonProfile.class, GraknShortQueryHandlers.LdbcShortQuery1PersonProfileHandler.class);
     }
