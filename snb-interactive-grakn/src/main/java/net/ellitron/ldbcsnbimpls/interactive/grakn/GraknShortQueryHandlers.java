@@ -3,6 +3,7 @@ package net.ellitron.ldbcsnbimpls.interactive.grakn;
 import ai.grakn.GraknGraph;
 
 import ai.grakn.concept.Concept;
+import ai.grakn.graql.AskQuery;
 import ai.grakn.graql.MatchQuery;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
@@ -123,12 +124,11 @@ public class GraknShortQueryHandlers {
                     "($person, $friend) isa knows has creation-date $date; " +
                     "$friend has person-id $friendId has first-name $fname has last-name $lname; ";
 
-            System.out.println(query);
 
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
             if (results.size() > 0) {
-                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true))
+                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true)).reversed()
                        .thenComparingLong(map -> resource(map, "friendId"));
 
                 List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
@@ -261,7 +261,7 @@ public class GraknShortQueryHandlers {
 
         }
 
-    /*
+
     public static class LdbcShortQuery7MessageRepliesHandler implements
             OperationHandler<LdbcShortQuery7MessageReplies, GraknDbConnectionState> {
 
@@ -270,7 +270,54 @@ public class GraknShortQueryHandlers {
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter resultReporter) throws DbException {
 
+            GraknGraph graph = dbConnectionState.graph();
+
+
+            String query = "match $m isa message has message-id " + operation.messageId() + " ;" +
+                    "($m, $author1) isa has-creator; " +
+                    "($m, $comment) isa reply-of; " +
+                    "$comment has message-id $cid has content $content has creation-date $date; " +
+                    "($comment, $author2) isa has-creator; " +
+                    "$author2 has person-id $pid, has first-name $fname, has last-name $lname;";
+
+            List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+
+            if (results.size() > 0) {
+                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true)).reversed()
+                        .thenComparingLong(map -> resource(map, "pid"));
+
+                List<LdbcShortQuery7MessageRepliesResult> result = results.stream()
+                        .sorted(ugly)
+                        .map(map -> new LdbcShortQuery7MessageRepliesResult(resource(map, "cid"),
+                                resource(map, "content"),
+                                dateStringToLong(resource(map, "date"), true),
+                                resource(map, "pid"),
+                                resource(map, "fname"),
+                                resource(map, "lname"),
+                                checkIfFriends(conceptId(map, "author1"), conceptId(map, "author2"), graph)))
+                        .collect(Collectors.toList());
+
+                resultReporter.report(0, result, operation);
+            } else {
+                resultReporter.report(0, null, operation);
+            }
+
+
         }
-    }*/
+
+        private boolean checkIfFriends(String author1, String author2, GraknGraph graph) {
+            String query = "match $x id '" + author1 + "'; $y id '" + author2 + "';" +
+                    "($x, $y) isa knows; ask;";
+            return graph.graql().<AskQuery>parse(query).execute();
+        }
+
+        private String conceptId(Map<String, Concept> result, String name) {
+            return result.get(name).getId().toString();
+        }
+
+        private <T> T resource(Map<String, Concept> result, String name) {
+            return result.get(name).<T>asResource().getValue();
+        }
+    }
 }
 
