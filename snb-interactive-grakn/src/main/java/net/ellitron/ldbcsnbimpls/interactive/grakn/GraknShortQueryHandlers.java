@@ -11,9 +11,10 @@ import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Comparator.comparingLong;
 
 /**
  * Created by miko on 06/04/2017.
@@ -58,9 +59,9 @@ public class GraknShortQueryHandlers {
 
             String query =
                     "match" +
-                            "$person isa person has person-id '" +
+                            "$person isa person has person-id " +
                             operation.personId() +
-                            "' has first-name $first-name" +
+                            " has first-name $first-name" +
                             " has last-name $last-name" +
                             " has birth-day $birthday" +
                             " has location-ip $location-ip" +
@@ -92,6 +93,57 @@ public class GraknShortQueryHandlers {
             }
         }
     }
+
+    /*
+    public static class LdbcShortQuery2PersonPostsHandler implements
+            OperationHandler<LdbcShortQuery2PersonPosts, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcShortQuery2PersonPosts operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter resultReporter) throws DbException {
+            GraknGraph graph = dbConnectionState.graph();
+
+
+        }
+    }
+    */
+
+    public static class LdbcShortQuery3PersonFriendsHandler implements
+            OperationHandler<LdbcShortQuery3PersonFriends, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcShortQuery3PersonFriends operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter resultReporter) throws DbException {
+            GraknGraph graph = dbConnectionState.graph();
+
+            String query = "match " +
+                    "$person isa person has person-id " +  operation.personId() + "; " +
+                    "($person, $friend) isa knows has creation-date $date; " +
+                    "$friend has person-id $friendId has first-name $fname has last-name $lname; " +
+                    "order by desc $date $id;";
+
+            List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+
+            if (results.size() > 0) {
+                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true))
+                       .thenComparingLong(map -> resource(map, "friendId"));
+                List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
+                        .sorted(ugly)
+                        .map(map -> new LdbcShortQuery3PersonFriendsResult(resource(map, "friendId"), resource(map, "fname"), resource(map, "lname"), dateStringToLong(resource(map, "date"), true)))
+                        .collect(Collectors.toList());
+                resultReporter.report(0, result, operation);
+            } else {
+                resultReporter.report(0, null, operation);
+            }
+        }
+
+        private <T> T resource(Map<String, Concept> result, String name) {
+            return result.get(name).<T>asResource().getValue();
+        }
+    }
+
 
     public static class LdbcShortQuery4MessageContentHandler implements
             OperationHandler<LdbcShortQuery4MessageContent, GraknDbConnectionState> {
