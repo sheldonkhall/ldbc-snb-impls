@@ -95,7 +95,7 @@ public class GraknShortQueryHandlers {
         }
     }
 
-    /*
+
     public static class LdbcShortQuery2PersonPostsHandler implements
             OperationHandler<LdbcShortQuery2PersonPosts, GraknDbConnectionState> {
 
@@ -105,10 +105,46 @@ public class GraknShortQueryHandlers {
                                      ResultReporter resultReporter) throws DbException {
             GraknGraph graph = dbConnectionState.graph();
 
+            String query = "match " +
+                    "$person isa person has person-id " + operation.personId() + "; " +
+                    "($person, $message) isa has-creator; " +
+                    "$message has creation-date $date has message-id $messageId; " +
+                    "($message, $originalPost) isa original-post; " +
+                    "$originalPost has message-id $opId;" +
+                    "($originalPost, $person2) isa has-creator; " +
+                    "$person2 has person-id $authorId has first-name $fname has last-name $lname; ";
+
+            List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
+
+            if (results.size() > 0) {
+                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true)).reversed()
+                        .thenComparingLong(map -> resource(map, "messageId")).reversed();
+
+                List<LdbcShortQuery2PersonPostsResult> result = results.stream()
+                        .sorted(ugly).limit(10)
+                        .map(map -> new LdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
+                                resource(map, "content"),
+                                dateStringToLong(resource(map, "date"), true),
+                                resource(map, "opId"),
+                                resource(map, "authorId"),
+                                resource(map, "fname"),
+                                resource(map, "lname")))
+                        .collect(Collectors.toList());
+
+                resultReporter.report(0, result, operation);
+            } else {
+                resultReporter.report(0, null, operation);
+            }
+
+
 
         }
+
+        private <T> T resource(Map<String, Concept> result, String name) {
+            return result.get(name).<T>asResource().getValue();
+        }
     }
-    */
+
 
     public static class LdbcShortQuery3PersonFriendsHandler implements
             OperationHandler<LdbcShortQuery3PersonFriends, GraknDbConnectionState> {
@@ -238,7 +274,7 @@ public class GraknShortQueryHandlers {
                     "(moderated: $forum, moderator: $mod) isa has-moderator; " +
                     "$mod has person-id $modid, has first-name $fname, has last-name $lname;";
 
-            List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+            List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
             if (results.size() > 0) {
                 Map<String, Concept> fres = results.get(0);
