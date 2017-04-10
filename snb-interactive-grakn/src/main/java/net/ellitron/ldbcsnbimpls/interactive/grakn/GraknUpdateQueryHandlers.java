@@ -1,0 +1,321 @@
+package net.ellitron.ldbcsnbimpls.interactive.grakn;
+
+import ai.grakn.GraknGraph;
+import ai.grakn.graql.InsertQuery;
+import com.ldbc.driver.*;
+import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
+
+
+/**
+ * Created by miko on 10/04/2017.
+ */
+public class GraknUpdateQueryHandlers {
+
+    public static class LdbcUpdate1AddPersonHandler implements OperationHandler<LdbcUpdate1AddPerson, GraknDbConnectionState> {
+        @Override
+        public void executeOperation(LdbcUpdate1AddPerson operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            StringBuilder query = new StringBuilder("match ");
+            StringBuilder interests = new StringBuilder();
+            StringBuilder workAndStudyPlaces = new StringBuilder();
+
+            query.append("$city has city-id " + operation.cityId() + "; ");
+
+
+            // TODO: Add roles
+            for (Long tag: operation.tagIds()) {
+                query.append("$" + tag.toString() + " isa tag has tag-id " + tag + "; ");
+                interests.append("($x, $" + tag.toString() + ") isa has-interest;");
+            }
+
+            // TODO: ADD roles
+            for (LdbcUpdate1AddPerson.Organization org: operation.studyAt()) {
+                query.append("$" + org.organizationId() + " isa university has organisation-id " + org.organizationId() + "; ");
+                workAndStudyPlaces.append("($x, $" + org.organizationId() + ") isa study-at has class-year " + org.year() + "; ");
+            }
+
+            for (LdbcUpdate1AddPerson.Organization org: operation.workAt()) {
+                query.append("$" + org.organizationId() + " isa company has organisation-id " + org.organizationId() + "; ");
+                workAndStudyPlaces.append("($x, $" + org.organizationId() + ") isa works-at has workFrom " + org.year() + "; ");
+            }
+
+            String baseInsertQuery = "insert " +
+                    "$x isa person has person-id " + operation.personId() +
+                    " has first-name '" + operation.personFirstName() + "' " +
+                    "has last-name '" + operation.personLastName() + "' '" +
+                    "has birthday " + operation.birthday().getTime() +
+                    " has creation-date" + operation.creationDate().getTime() +
+                    " has location-ip '" + operation.locationIp() + "' " +
+                    "has browser-used '" + operation.browserUsed() + "' " +
+                    "has gender '" + operation.gender() + " ";
+
+            query.append(baseInsertQuery);
+
+            for (String language: operation.languages()) {
+                query.append("has speaks '" + language + "' ");
+            }
+
+            for (String email: operation.emails()) {
+                query.append("has emails '" + email + "' ");
+            }
+
+            query.append(interests);
+
+            // TODO: Add roles
+            query.append("($x, $city) isa is-located-in;");
+
+            query.append(workAndStudyPlaces);
+
+            graph.graql().<InsertQuery>parse(query.toString()).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+
+
+        }
+    }
+
+    public static class LdbcUpdate2AddPostLikeHandler implements OperationHandler<LdbcUpdate2AddPostLike, GraknDbConnectionState> {
+
+        //TODO: Add roles
+
+        @Override
+        public void executeOperation(LdbcUpdate2AddPostLike operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            String query = "match " +
+                    "$x has person-id " + operation.personId() + "; " +
+                    "$y has message-id " + operation.postId() + "; " +
+                    "insert ($x, $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+
+            graph.graql().<InsertQuery>parse(query).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+
+
+        }
+    }
+
+    public static class LdbcUpdate3AddCommentLikeHandler implements OperationHandler<LdbcUpdate3AddCommentLike, GraknDbConnectionState> {
+
+        //TODO: Add roles
+
+        @Override
+        public void executeOperation(LdbcUpdate3AddCommentLike operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            String query = "match " +
+                    "$x has person-id " + operation.personId() + "; " +
+                    "$y has message-id " + operation.commentId() + "; " +
+                    "insert ($x, $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+
+            graph.graql().<InsertQuery>parse(query).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+
+
+
+        }
+    }
+
+    public static class LdbcUpdate4AddForumHandler implements OperationHandler<LdbcUpdate4AddForum, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcUpdate4AddForum operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            StringBuilder query = new StringBuilder("match ");
+            StringBuilder tags = new StringBuilder();
+
+            query.append("$mod has person-id " + operation.moderatorPersonId() + "; ");
+
+
+            //TODO: Add roles
+            for (long tag: operation.tagIds()) {
+                query.append("$" + tag + " has tag-id " + tag + "; ");
+                tags.append("($forum, $" + tag + ") isa has-tag; ");
+            }
+
+            String insertQ = "insert $forum isa forum has forum-id " + operation.forumId() +
+                    " has title '" + operation.forumTitle() + "' " +
+                    "has creation-date " + operation.creationDate() + "; ";
+
+            query.append(insertQ);
+            //TODO: Add roles
+            query.append("($mod, $forum) isa has-moderator; ");
+            query.append(tags);
+
+            graph.graql().<InsertQuery>parse(query.toString()).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+        }
+    }
+
+    public static class LdbcUpdate5AddForumMembershipHandler implements OperationHandler<LdbcUpdate5AddForumMembership, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcUpdate5AddForumMembership operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+
+            //TODO: ADD ROLES
+
+            String query = "match $forum has forum-id " + operation.forumId() + "; " +
+                    " $person has person-id " + operation.personId() + "; " +
+                    " insert ($person, $forum) isa has-member has join-date + " + operation.joinDate() + ";";
+
+            graph.graql().<InsertQuery>parse(query.toString()).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+
+
+        }
+    }
+
+    public static class LdbcUpdate6AddPostHandler implements OperationHandler<LdbcUpdate6AddPost, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcUpdate6AddPost operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            StringBuilder query = new StringBuilder("match ");
+            StringBuilder tags = new StringBuilder();
+
+            query.append("$author has person-id" + operation.authorPersonId() + "; ");
+            query.append("$forum has forum-id" + operation.forumId() + "; ");
+            query.append("$country has country-id " + operation.countryId() + "; ");
+
+            //TODO: Add roles
+            for (long tag: operation.tagIds()) {
+                query.append("$" + tag + " has tag-id " + tag + "; ");
+                tags.append("($post, $" + tag + ") isa has-tag; ");
+            }
+
+            String insertQ = "insert $post isa post has message-id " + operation.postId() + " " +
+                    "has location-ip '" + operation.locationIp() + "' " +
+                    "has browser-used '" + operation.browserUsed() + "' " +
+                    "has language '" + operation.language() + "' " +
+                    "has length " + operation.length() + " " +
+                    "has creation-date " + operation.creationDate().getTime() + " ";
+
+            query.append(insertQ);
+            if (operation.imageFile().length() > 0 ) {
+                query.append("has image-file '" + operation.imageFile() + "'; ");
+            } else {
+                query.append(" has content '" + operation.content() + "'; ");
+            }
+            //TODO ADD ROLES:
+            query.append("($post, $author) isa has-creator; ");
+            query.append("($post, $country) isa located-in; ");
+            query.append("($post, $forum) isa container-of; ");
+
+            query.append(tags);
+
+
+
+            graph.graql().<InsertQuery>parse(query.toString()).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+        }
+
+    }
+
+    public static class LdbcUpdate7AddCommentHandler implements OperationHandler<LdbcUpdate7AddComment, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcUpdate7AddComment operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            StringBuilder query = new StringBuilder("match ");
+            StringBuilder tags = new StringBuilder();
+
+            query.append("$author has person-id" + operation.authorPersonId() + "; ");
+            if (operation.replyToPostId() != -1 ) {
+                query.append("$original has message-id" + operation.replyToPostId() + "; ");
+            } else {
+                query.append("$original has message-id" + operation.replyToCommentId() + "; ");
+            }
+            query.append("$country has country-id " + operation.countryId() + "; ");
+
+            //TODO: Add roles
+            for (long tag: operation.tagIds()) {
+                query.append("$" + tag + " has tag-id " + tag + "; ");
+                tags.append("($comment, $" + tag + ") isa has-tag; ");
+            }
+
+            String insertQ = "insert $comment isa comment has message-id " + operation.commentId() + " " +
+                    "has content '" + operation.content() + "' " +
+                    "has location-ip '" + operation.locationIp() + "' " +
+                    "has browser-used '" + operation.browserUsed() + "' " +
+                    "has creation-date  " + operation.creationDate().getTime() + "  " +
+                    "has length " + operation.length() + "; ";
+
+            query.append(insertQ);
+
+
+            //TODO ADD ROLES:
+            query.append("($comment, $author) isa has-creator; ");
+            query.append("($comment, $country) isa located-in; ");
+            query.append("($comment, $original) isa reply-of; ");
+
+            query.append(tags);
+
+
+
+            graph.graql().<InsertQuery>parse(query.toString()).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+        }
+
+    }
+
+    public static class LdbcUpdate8AddFriendshipHandler implements OperationHandler<LdbcUpdate8AddFriendship, GraknDbConnectionState> {
+
+        @Override
+        public void executeOperation(LdbcUpdate8AddFriendship operation,
+                                     GraknDbConnectionState dbConnectionState,
+                                     ResultReporter reporter) throws DbException {
+
+            GraknGraph graph = dbConnectionState.graph();
+
+            //TODO: Add roles
+
+            String query = "match $x has person-id " + operation.person1Id() +
+                    "; $y has person-id " + operation.person2Id() + ";" +
+                    "insert ($x, $y) isa knows has creation-date " + operation.creationDate() + ";";
+
+            graph.graql().<InsertQuery>parse(query.toString()).execute();
+            graph.commit();
+
+            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+        }
+    }
+}
