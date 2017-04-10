@@ -15,8 +15,6 @@ import java.util.Map;
 public class GraknDbConnectionState extends DbConnectionState {
 
     private final GraknSession session;
-    private final GraknGraph graph;
-
 
     public GraknDbConnectionState(Map<String, String> properties) {
 
@@ -31,17 +29,16 @@ public class GraknDbConnectionState extends DbConnectionState {
 
 
         GraknSession session = Grakn.session(uri, keyspace);
+        session.open(GraknTxType.WRITE);
         this.session = session;
-        this.graph = session.open(GraknTxType.READ);
     }
 
     @Override
     public void close() throws IOException {
-        graph.close();
         session.close();
     }
 
-    GraknGraph graph() {
-        return graph;
+    GraknSession session() {
+        return this.session;
     }
 }

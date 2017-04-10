@@ -1,6 +1,8 @@
 package net.ellitron.ldbcsnbimpls.interactive.grakn;
 
 import ai.grakn.GraknGraph;
+import ai.grakn.GraknSession;
+import ai.grakn.GraknTxType;
 import ai.grakn.graql.InsertQuery;
 import com.ldbc.driver.*;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
@@ -16,62 +18,62 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate1AddPerson operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                StringBuilder query = new StringBuilder("match ");
+                StringBuilder interests = new StringBuilder();
+                StringBuilder workAndStudyPlaces = new StringBuilder();
 
-            StringBuilder query = new StringBuilder("match ");
-            StringBuilder interests = new StringBuilder();
-            StringBuilder workAndStudyPlaces = new StringBuilder();
-
-            query.append("$city has city-id " + operation.cityId() + "; ");
+                query.append("$city has city-id " + operation.cityId() + "; ");
 
 
-            for (Long tag: operation.tagIds()) {
-                query.append("$" + tag.toString() + " isa tag has tag-id " + tag + "; ");
-                interests.append("(interested: $x, interest: $" + tag.toString() + ") isa has-interest;");
+                for (Long tag : operation.tagIds()) {
+                    query.append("$" + tag.toString() + " isa tag has tag-id " + tag + "; ");
+                    interests.append("(interested: $x, interest: $" + tag.toString() + ") isa has-interest;");
+                }
+
+                for (LdbcUpdate1AddPerson.Organization org : operation.studyAt()) {
+                    query.append("$" + org.organizationId() + " isa university has organisation-id " + org.organizationId() + "; ");
+                    workAndStudyPlaces.append("(student: $x, school: $" + org.organizationId() + ") isa study-at has class-year " + org.year() + "; ");
+                }
+
+                for (LdbcUpdate1AddPerson.Organization org : operation.workAt()) {
+                    query.append("$" + org.organizationId() + " isa company has organisation-id " + org.organizationId() + "; ");
+                    workAndStudyPlaces.append("(employee: $x, employer: $" + org.organizationId() + ") isa works-at has workFrom " + org.year() + "; ");
+                }
+
+                String baseInsertQuery = "insert " +
+                        "$x isa person has person-id " + operation.personId() +
+                        " has first-name '" + operation.personFirstName() + "' " +
+                        "has last-name '" + operation.personLastName() + "' '" +
+                        "has birthday " + operation.birthday().getTime() +
+                        " has creation-date" + operation.creationDate().getTime() +
+                        " has location-ip '" + operation.locationIp() + "' " +
+                        "has browser-used '" + operation.browserUsed() + "' " +
+                        "has gender '" + operation.gender() + " ";
+
+                query.append(baseInsertQuery);
+
+                for (String language : operation.languages()) {
+                    query.append("has speaks '" + language + "' ");
+                }
+
+                for (String email : operation.emails()) {
+                    query.append("has emails '" + email + "' ");
+                }
+
+                query.append(interests);
+
+                query.append("(located: $x, region: $city) isa is-located-in;");
+
+                query.append(workAndStudyPlaces);
+
+                graph.graql().<InsertQuery>parse(query.toString()).execute();
+                graph.commit();
+
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
             }
-
-            for (LdbcUpdate1AddPerson.Organization org: operation.studyAt()) {
-                query.append("$" + org.organizationId() + " isa university has organisation-id " + org.organizationId() + "; ");
-                workAndStudyPlaces.append("(student: $x, school: $" + org.organizationId() + ") isa study-at has class-year " + org.year() + "; ");
-            }
-
-            for (LdbcUpdate1AddPerson.Organization org: operation.workAt()) {
-                query.append("$" + org.organizationId() + " isa company has organisation-id " + org.organizationId() + "; ");
-                workAndStudyPlaces.append("(employee: $x, employer: $" + org.organizationId() + ") isa works-at has workFrom " + org.year() + "; ");
-            }
-
-            String baseInsertQuery = "insert " +
-                    "$x isa person has person-id " + operation.personId() +
-                    " has first-name '" + operation.personFirstName() + "' " +
-                    "has last-name '" + operation.personLastName() + "' '" +
-                    "has birthday " + operation.birthday().getTime() +
-                    " has creation-date" + operation.creationDate().getTime() +
-                    " has location-ip '" + operation.locationIp() + "' " +
-                    "has browser-used '" + operation.browserUsed() + "' " +
-                    "has gender '" + operation.gender() + " ";
-
-            query.append(baseInsertQuery);
-
-            for (String language: operation.languages()) {
-                query.append("has speaks '" + language + "' ");
-            }
-
-            for (String email: operation.emails()) {
-                query.append("has emails '" + email + "' ");
-            }
-
-            query.append(interests);
-
-            query.append("(located: $x, region: $city) isa is-located-in;");
-
-            query.append(workAndStudyPlaces);
-
-            graph.graql().<InsertQuery>parse(query.toString()).execute();
-            graph.commit();
-
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
-
 
         }
     }
@@ -83,19 +85,19 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate2AddPostLike operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                String query = "match " +
+                        "$x has person-id " + operation.personId() + "; " +
+                        "$y has message-id " + operation.postId() + "; " +
+                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
 
-            String query = "match " +
-                    "$x has person-id " + operation.personId() + "; " +
-                    "$y has message-id " + operation.postId() + "; " +
-                    "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+                graph.graql().<InsertQuery>parse(query).execute();
+                graph.commit();
 
-            graph.graql().<InsertQuery>parse(query).execute();
-            graph.commit();
-
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
-
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
+            }
 
         }
     }
@@ -107,20 +109,20 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate3AddCommentLike operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                String query = "match " +
+                        "$x has person-id " + operation.personId() + "; " +
+                        "$y has message-id " + operation.commentId() + "; " +
+                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
 
-            String query = "match " +
-                    "$x has person-id " + operation.personId() + "; " +
-                    "$y has message-id " + operation.commentId() + "; " +
-                    "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+                graph.graql().<InsertQuery>parse(query).execute();
+                graph.commit();
 
-            graph.graql().<InsertQuery>parse(query).execute();
-            graph.commit();
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
 
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
-
-
+            }
 
         }
     }
@@ -131,32 +133,34 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate4AddForum operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                StringBuilder query = new StringBuilder("match ");
+                StringBuilder tags = new StringBuilder();
 
-            StringBuilder query = new StringBuilder("match ");
-            StringBuilder tags = new StringBuilder();
-
-            query.append("$mod has person-id " + operation.moderatorPersonId() + "; ");
+                query.append("$mod has person-id " + operation.moderatorPersonId() + "; ");
 
 
-            for (long tag: operation.tagIds()) {
-                query.append("$" + tag + " has tag-id " + tag + "; ");
-                tags.append("(tagged: $forum, topic:  $" + tag + ") isa has-tag; ");
+                for (long tag : operation.tagIds()) {
+                    query.append("$" + tag + " has tag-id " + tag + "; ");
+                    tags.append("(tagged: $forum, topic:  $" + tag + ") isa has-tag; ");
+                }
+
+                String insertQ = "insert $forum isa forum has forum-id " + operation.forumId() +
+                        " has title '" + operation.forumTitle() + "' " +
+                        "has creation-date " + operation.creationDate() + "; ";
+
+                query.append(insertQ);
+                query.append("(moderator: $mod, moderated: $forum) isa has-moderator; ");
+                query.append(tags);
+
+                graph.graql().<InsertQuery>parse(query.toString()).execute();
+                graph.commit();
+
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
+
             }
-
-            String insertQ = "insert $forum isa forum has forum-id " + operation.forumId() +
-                    " has title '" + operation.forumTitle() + "' " +
-                    "has creation-date " + operation.creationDate() + "; ";
-
-            query.append(insertQ);
-            query.append("(moderator: $mod, moderated: $forum) isa has-moderator; ");
-            query.append(tags);
-
-            graph.graql().<InsertQuery>parse(query.toString()).execute();
-            graph.commit();
-
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
         }
     }
 
@@ -166,21 +170,19 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate5AddForumMembership operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                String query = "match $forum has forum-id " + operation.forumId() + "; " +
+                        " $person has person-id " + operation.personId() + "; " +
+                        " insert (member: $person, group: $forum) isa has-member has join-date " + operation.joinDate().getTime() + ";";
 
+                graph.graql().<InsertQuery>parse(query.toString()).execute();
+                graph.commit();
 
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
 
-            String query = "match $forum has forum-id " + operation.forumId() + "; " +
-                    " $person has person-id " + operation.personId() + "; " +
-                    " insert (member: $person, group: $forum) isa has-member has join-date + " + operation.joinDate() + ";";
-
-            graph.graql().<InsertQuery>parse(query.toString()).execute();
-            graph.commit();
-
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
-
-
+            }
         }
     }
 
@@ -190,46 +192,46 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate6AddPost operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                StringBuilder query = new StringBuilder("match ");
+                StringBuilder tags = new StringBuilder();
 
-            StringBuilder query = new StringBuilder("match ");
-            StringBuilder tags = new StringBuilder();
+                query.append("$author has person-id" + operation.authorPersonId() + "; ");
+                query.append("$forum has forum-id" + operation.forumId() + "; ");
+                query.append("$country has country-id " + operation.countryId() + "; ");
 
-            query.append("$author has person-id" + operation.authorPersonId() + "; ");
-            query.append("$forum has forum-id" + operation.forumId() + "; ");
-            query.append("$country has country-id " + operation.countryId() + "; ");
+                for (long tag : operation.tagIds()) {
+                    query.append("$" + tag + " has tag-id " + tag + "; ");
+                    tags.append("(tagged: $post, topic: $" + tag + ") isa has-tag; ");
+                }
 
-            for (long tag: operation.tagIds()) {
-                query.append("$" + tag + " has tag-id " + tag + "; ");
-                tags.append("(tagged: $post, topic: $" + tag + ") isa has-tag; ");
+                String insertQ = "insert $post isa post has message-id " + operation.postId() + " " +
+                        "has location-ip '" + operation.locationIp() + "' " +
+                        "has browser-used '" + operation.browserUsed() + "' " +
+                        "has language '" + operation.language() + "' " +
+                        "has length " + operation.length() + " " +
+                        "has creation-date " + operation.creationDate().getTime() + " ";
+
+                query.append(insertQ);
+                if (operation.imageFile().length() > 0) {
+                    query.append("has image-file '" + operation.imageFile() + "'; ");
+                } else {
+                    query.append(" has content '" + operation.content() + "'; ");
+                }
+                query.append("(product: $post, creator:  $author) isa has-creator; ");
+                query.append("(located: $post, region: $country) isa located-in; ");
+                query.append("(contained: $post, container: $forum) isa container-of; ");
+
+                query.append(tags);
+
+
+                graph.graql().<InsertQuery>parse(query.toString()).execute();
+                graph.commit();
+
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
             }
-
-            String insertQ = "insert $post isa post has message-id " + operation.postId() + " " +
-                    "has location-ip '" + operation.locationIp() + "' " +
-                    "has browser-used '" + operation.browserUsed() + "' " +
-                    "has language '" + operation.language() + "' " +
-                    "has length " + operation.length() + " " +
-                    "has creation-date " + operation.creationDate().getTime() + " ";
-
-            query.append(insertQ);
-            if (operation.imageFile().length() > 0 ) {
-                query.append("has image-file '" + operation.imageFile() + "'; ");
-            } else {
-                query.append(" has content '" + operation.content() + "'; ");
-            }
-            query.append("(product: $post, creator:  $author) isa has-creator; ");
-            query.append("(located: $post, region: $country) isa located-in; ");
-            query.append("(contained: $post, container: $forum) isa container-of; ");
-
-            query.append(tags);
-
-
-
-            graph.graql().<InsertQuery>parse(query.toString()).execute();
-            graph.commit();
-
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
         }
 
     }
@@ -240,47 +242,47 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate7AddComment operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                StringBuilder query = new StringBuilder("match ");
+                StringBuilder tags = new StringBuilder();
 
-            StringBuilder query = new StringBuilder("match ");
-            StringBuilder tags = new StringBuilder();
+                query.append("$author has person-id" + operation.authorPersonId() + "; ");
+                if (operation.replyToPostId() != -1) {
+                    query.append("$original has message-id" + operation.replyToPostId() + "; ");
+                } else {
+                    query.append("$original has message-id" + operation.replyToCommentId() + "; ");
+                }
+                query.append("$country has country-id " + operation.countryId() + "; ");
 
-            query.append("$author has person-id" + operation.authorPersonId() + "; ");
-            if (operation.replyToPostId() != -1 ) {
-                query.append("$original has message-id" + operation.replyToPostId() + "; ");
-            } else {
-                query.append("$original has message-id" + operation.replyToCommentId() + "; ");
+                for (long tag : operation.tagIds()) {
+                    query.append("$" + tag + " has tag-id " + tag + "; ");
+                    tags.append("(tagged: $comment, topic:  $" + tag + ") isa has-tag; ");
+                }
+
+                String insertQ = "insert $comment isa comment has message-id " + operation.commentId() + " " +
+                        "has content '" + operation.content() + "' " +
+                        "has location-ip '" + operation.locationIp() + "' " +
+                        "has browser-used '" + operation.browserUsed() + "' " +
+                        "has creation-date  " + operation.creationDate().getTime() + "  " +
+                        "has length " + operation.length() + "; ";
+
+                query.append(insertQ);
+
+
+                query.append("(product: $comment, creator: $author) isa has-creator; ");
+                query.append("(located: $comment, region: $country) isa located-in; ");
+                query.append("(reply: $comment, original: $original) isa reply-of; ");
+
+                query.append(tags);
+
+
+                graph.graql().<InsertQuery>parse(query.toString()).execute();
+                graph.commit();
+
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
             }
-            query.append("$country has country-id " + operation.countryId() + "; ");
-
-            for (long tag: operation.tagIds()) {
-                query.append("$" + tag + " has tag-id " + tag + "; ");
-                tags.append("(tagged: $comment, topic:  $" + tag + ") isa has-tag; ");
-            }
-
-            String insertQ = "insert $comment isa comment has message-id " + operation.commentId() + " " +
-                    "has content '" + operation.content() + "' " +
-                    "has location-ip '" + operation.locationIp() + "' " +
-                    "has browser-used '" + operation.browserUsed() + "' " +
-                    "has creation-date  " + operation.creationDate().getTime() + "  " +
-                    "has length " + operation.length() + "; ";
-
-            query.append(insertQ);
-
-
-            query.append("(product: $comment, creator: $author) isa has-creator; ");
-            query.append("(located: $comment, region: $country) isa located-in; ");
-            query.append("(reply: $comment, original: $original) isa reply-of; ");
-
-            query.append(tags);
-
-
-
-            graph.graql().<InsertQuery>parse(query.toString()).execute();
-            graph.commit();
-
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
         }
 
     }
@@ -291,18 +293,18 @@ public class GraknUpdateQueryHandlers {
         public void executeOperation(LdbcUpdate8AddFriendship operation,
                                      GraknDbConnectionState dbConnectionState,
                                      ResultReporter reporter) throws DbException {
+            GraknSession session = dbConnectionState.session();
+            try (GraknGraph graph = session.open(GraknTxType.WRITE)) {
 
-            GraknGraph graph = dbConnectionState.graph();
+                String query = "match $x has person-id " + operation.person1Id() +
+                        "; $y has person-id " + operation.person2Id() + ";" +
+                        "insert (friend: $x, friend: $y) isa knows has creation-date " + operation.creationDate() + ";";
 
+                graph.graql().<InsertQuery>parse(query.toString()).execute();
+                graph.commit();
 
-            String query = "match $x has person-id " + operation.person1Id() +
-                    "; $y has person-id " + operation.person2Id() + ";" +
-                    "insert (friend: $x, friend: $y) isa knows has creation-date " + operation.creationDate() + ";";
-
-            graph.graql().<InsertQuery>parse(query.toString()).execute();
-            graph.commit();
-
-            reporter.report(0, LdbcNoResult.INSTANCE, operation);
+                reporter.report(0, LdbcNoResult.INSTANCE, operation);
+            }
         }
     }
 }
