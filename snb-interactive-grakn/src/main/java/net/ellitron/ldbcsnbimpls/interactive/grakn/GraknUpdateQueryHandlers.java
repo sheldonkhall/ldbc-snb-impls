@@ -91,7 +91,7 @@ public class GraknUpdateQueryHandlers {
                 String query = "match " +
                         "$x has person-id " + operation.personId() + "; " +
                         "$y has message-id " + operation.postId() + "; " +
-                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate().getTime() + ";";
 
                 graph.graql().<InsertQuery>parse(query).execute();
                 graph.commit();
@@ -115,7 +115,7 @@ public class GraknUpdateQueryHandlers {
                 String query = "match " +
                         "$x has person-id " + operation.personId() + "; " +
                         "$y has message-id " + operation.commentId() + "; " +
-                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate().getTime() + ";";
 
                 graph.graql().<InsertQuery>parse(query).execute();
                 graph.commit();
@@ -149,7 +149,7 @@ public class GraknUpdateQueryHandlers {
 
                 String insertQ = "insert $forum isa forum has forum-id " + operation.forumId() +
                         " has title '" + operation.forumTitle() + "' " +
-                        "has creation-date " + operation.creationDate() + "; ";
+                        "has creation-date " + operation.creationDate().getTime() + "; ";
 
                 query.append(insertQ);
                 query.append("(moderator: $mod, moderated: $forum) isa has-moderator; ");
@@ -298,7 +298,7 @@ public class GraknUpdateQueryHandlers {
 
                 String query = "match $x has person-id " + operation.person1Id() +
                         "; $y has person-id " + operation.person2Id() + ";" +
-                        "insert (friend: $x, friend: $y) isa knows has creation-date " + operation.creationDate() + ";";
+                        "insert (friend: $x, friend: $y) isa knows has creation-date " + operation.creationDate().getTime() + ";";
 
                 graph.graql().<InsertQuery>parse(query.toString()).execute();
                 graph.commit();
