@@ -29,7 +29,6 @@ public class GraknDbConnectionState extends DbConnectionState {
 
 
         GraknSession session = Grakn.session(uri, keyspace);
-        session.open(GraknTxType.WRITE);
         this.session = session;
     }
 
