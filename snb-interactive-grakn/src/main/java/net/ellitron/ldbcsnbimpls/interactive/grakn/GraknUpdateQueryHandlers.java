@@ -26,21 +26,19 @@ public class GraknUpdateQueryHandlers {
             query.append("$city has city-id " + operation.cityId() + "; ");
 
 
-            // TODO: Add roles
             for (Long tag: operation.tagIds()) {
                 query.append("$" + tag.toString() + " isa tag has tag-id " + tag + "; ");
-                interests.append("($x, $" + tag.toString() + ") isa has-interest;");
+                interests.append("(interested: $x, interest: $" + tag.toString() + ") isa has-interest;");
             }
 
-            // TODO: ADD roles
             for (LdbcUpdate1AddPerson.Organization org: operation.studyAt()) {
                 query.append("$" + org.organizationId() + " isa university has organisation-id " + org.organizationId() + "; ");
-                workAndStudyPlaces.append("($x, $" + org.organizationId() + ") isa study-at has class-year " + org.year() + "; ");
+                workAndStudyPlaces.append("(student: $x, school: $" + org.organizationId() + ") isa study-at has class-year " + org.year() + "; ");
             }
 
             for (LdbcUpdate1AddPerson.Organization org: operation.workAt()) {
                 query.append("$" + org.organizationId() + " isa company has organisation-id " + org.organizationId() + "; ");
-                workAndStudyPlaces.append("($x, $" + org.organizationId() + ") isa works-at has workFrom " + org.year() + "; ");
+                workAndStudyPlaces.append("(employee: $x, employer: $" + org.organizationId() + ") isa works-at has workFrom " + org.year() + "; ");
             }
 
             String baseInsertQuery = "insert " +
@@ -65,8 +63,7 @@ public class GraknUpdateQueryHandlers {
 
             query.append(interests);
 
-            // TODO: Add roles
-            query.append("($x, $city) isa is-located-in;");
+            query.append("(located: $x, region: $city) isa is-located-in;");
 
             query.append(workAndStudyPlaces);
 
@@ -81,7 +78,6 @@ public class GraknUpdateQueryHandlers {
 
     public static class LdbcUpdate2AddPostLikeHandler implements OperationHandler<LdbcUpdate2AddPostLike, GraknDbConnectionState> {
 
-        //TODO: Add roles
 
         @Override
         public void executeOperation(LdbcUpdate2AddPostLike operation,
@@ -93,7 +89,7 @@ public class GraknUpdateQueryHandlers {
             String query = "match " +
                     "$x has person-id " + operation.personId() + "; " +
                     "$y has message-id " + operation.postId() + "; " +
-                    "insert ($x, $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+                    "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
 
             graph.graql().<InsertQuery>parse(query).execute();
             graph.commit();
@@ -106,7 +102,6 @@ public class GraknUpdateQueryHandlers {
 
     public static class LdbcUpdate3AddCommentLikeHandler implements OperationHandler<LdbcUpdate3AddCommentLike, GraknDbConnectionState> {
 
-        //TODO: Add roles
 
         @Override
         public void executeOperation(LdbcUpdate3AddCommentLike operation,
@@ -118,7 +113,7 @@ public class GraknUpdateQueryHandlers {
             String query = "match " +
                     "$x has person-id " + operation.personId() + "; " +
                     "$y has message-id " + operation.commentId() + "; " +
-                    "insert ($x, $y) isa person-likes has creation-date " + operation.creationDate() + ";";
+                    "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate() + ";";
 
             graph.graql().<InsertQuery>parse(query).execute();
             graph.commit();
@@ -145,10 +140,9 @@ public class GraknUpdateQueryHandlers {
             query.append("$mod has person-id " + operation.moderatorPersonId() + "; ");
 
 
-            //TODO: Add roles
             for (long tag: operation.tagIds()) {
                 query.append("$" + tag + " has tag-id " + tag + "; ");
-                tags.append("($forum, $" + tag + ") isa has-tag; ");
+                tags.append("(tagged: $forum, topic:  $" + tag + ") isa has-tag; ");
             }
 
             String insertQ = "insert $forum isa forum has forum-id " + operation.forumId() +
@@ -156,8 +150,7 @@ public class GraknUpdateQueryHandlers {
                     "has creation-date " + operation.creationDate() + "; ";
 
             query.append(insertQ);
-            //TODO: Add roles
-            query.append("($mod, $forum) isa has-moderator; ");
+            query.append("(moderator: $mod, moderated: $forum) isa has-moderator; ");
             query.append(tags);
 
             graph.graql().<InsertQuery>parse(query.toString()).execute();
@@ -177,11 +170,10 @@ public class GraknUpdateQueryHandlers {
             GraknGraph graph = dbConnectionState.graph();
 
 
-            //TODO: ADD ROLES
 
             String query = "match $forum has forum-id " + operation.forumId() + "; " +
                     " $person has person-id " + operation.personId() + "; " +
-                    " insert ($person, $forum) isa has-member has join-date + " + operation.joinDate() + ";";
+                    " insert (member: $person, group: $forum) isa has-member has join-date + " + operation.joinDate() + ";";
 
             graph.graql().<InsertQuery>parse(query.toString()).execute();
             graph.commit();
@@ -208,10 +200,9 @@ public class GraknUpdateQueryHandlers {
             query.append("$forum has forum-id" + operation.forumId() + "; ");
             query.append("$country has country-id " + operation.countryId() + "; ");
 
-            //TODO: Add roles
             for (long tag: operation.tagIds()) {
                 query.append("$" + tag + " has tag-id " + tag + "; ");
-                tags.append("($post, $" + tag + ") isa has-tag; ");
+                tags.append("(tagged: $post, topic: $" + tag + ") isa has-tag; ");
             }
 
             String insertQ = "insert $post isa post has message-id " + operation.postId() + " " +
@@ -227,10 +218,9 @@ public class GraknUpdateQueryHandlers {
             } else {
                 query.append(" has content '" + operation.content() + "'; ");
             }
-            //TODO ADD ROLES:
-            query.append("($post, $author) isa has-creator; ");
-            query.append("($post, $country) isa located-in; ");
-            query.append("($post, $forum) isa container-of; ");
+            query.append("(product: $post, creator:  $author) isa has-creator; ");
+            query.append("(located: $post, region: $country) isa located-in; ");
+            query.append("(contained: $post, container: $forum) isa container-of; ");
 
             query.append(tags);
 
@@ -264,10 +254,9 @@ public class GraknUpdateQueryHandlers {
             }
             query.append("$country has country-id " + operation.countryId() + "; ");
 
-            //TODO: Add roles
             for (long tag: operation.tagIds()) {
                 query.append("$" + tag + " has tag-id " + tag + "; ");
-                tags.append("($comment, $" + tag + ") isa has-tag; ");
+                tags.append("(tagged: $comment, topic:  $" + tag + ") isa has-tag; ");
             }
 
             String insertQ = "insert $comment isa comment has message-id " + operation.commentId() + " " +
@@ -280,10 +269,9 @@ public class GraknUpdateQueryHandlers {
             query.append(insertQ);
 
 
-            //TODO ADD ROLES:
-            query.append("($comment, $author) isa has-creator; ");
-            query.append("($comment, $country) isa located-in; ");
-            query.append("($comment, $original) isa reply-of; ");
+            query.append("(product: $comment, creator: $author) isa has-creator; ");
+            query.append("(located: $comment, region: $country) isa located-in; ");
+            query.append("(reply: $comment, original: $original) isa reply-of; ");
 
             query.append(tags);
 
@@ -306,11 +294,10 @@ public class GraknUpdateQueryHandlers {
 
             GraknGraph graph = dbConnectionState.graph();
 
-            //TODO: Add roles
 
             String query = "match $x has person-id " + operation.person1Id() +
                     "; $y has person-id " + operation.person2Id() + ";" +
-                    "insert ($x, $y) isa knows has creation-date " + operation.creationDate() + ";";
+                    "insert (friend: $x, friend: $y) isa knows has creation-date " + operation.creationDate() + ";";
 
             graph.graql().<InsertQuery>parse(query.toString()).execute();
             graph.commit();
