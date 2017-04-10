@@ -25,30 +25,6 @@ import static java.util.Comparator.comparingLong;
 
 public class GraknShortQueryHandlers {
 
-    // TODO Move the data conversion somewhere smarter
-
-    public static long dateStringToLong(String date, boolean withTime) {
-        SimpleDateFormat f;
-
-        if (withTime) {
-            f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        }
-        else {
-            f = new SimpleDateFormat("yyyy-MM-dd");
-        }
-        f.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-
-        Long convertedDate = null;
-
-        try { convertedDate =
-                f.parse(date).getTime();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return convertedDate;
-    }
-
     public static class LdbcShortQuery1PersonProfileHandler
             implements OperationHandler<LdbcShortQuery1PersonProfile, GraknDbConnectionState> {
 
@@ -80,12 +56,12 @@ public class GraknShortQueryHandlers {
                         new LdbcShortQuery1PersonProfileResult(
                                 (String) fres.get("first-name").asResource().getValue(),
                                 (String) fres.get("last-name").asResource().getValue(),
-                                dateStringToLong((String) fres.get("birthday").asResource().getValue(), false),
+                                (Long) fres.get("birthday").asResource().getValue(),
                                 (String) fres.get("location-ip").asResource().getValue(),
                                 (String) fres.get("browser-used").asResource().getValue(),
                                 (Long) fres.get("placeID").asResource().getValue(),
                                 (String) fres.get("gender").asResource().getValue(),
-                                dateStringToLong((String) fres.get("creation-date").asResource().getValue(), true));
+                                (Long) fres.get("creation-date").asResource().getValue());
 
                 resultReporter.report(0, result, operation);
 
@@ -117,14 +93,14 @@ public class GraknShortQueryHandlers {
             List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
             if (results.size() > 0) {
-                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true)).reversed()
+                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
                         .thenComparingLong(map -> resource(map, "messageId")).reversed();
 
                 List<LdbcShortQuery2PersonPostsResult> result = results.stream()
                         .sorted(ugly).limit(10)
                         .map(map -> new LdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
                                 resource(map, "content"),
-                                dateStringToLong(resource(map, "date"), true),
+                                resource(map, "date"),
                                 resource(map, "opId"),
                                 resource(map, "authorId"),
                                 resource(map, "fname"),
@@ -164,7 +140,7 @@ public class GraknShortQueryHandlers {
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
             if (results.size() > 0) {
-                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true)).reversed()
+                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
                        .thenComparingLong(map -> resource(map, "friendId"));
 
                 List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
@@ -172,7 +148,7 @@ public class GraknShortQueryHandlers {
                         .map(map -> new LdbcShortQuery3PersonFriendsResult(resource(map, "friendId"),
                                 resource(map, "fname"),
                                 resource(map, "lname"),
-                                dateStringToLong(resource(map, "date"), true)))
+                                resource(map, "date")))
                         .collect(Collectors.toList());
 
                 resultReporter.report(0, result, operation);
@@ -206,7 +182,7 @@ public class GraknShortQueryHandlers {
                 Map<String, Concept> fres = results.get(0);
                 LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
                         (String) fres.get("content").asResource().getValue(),
-                        dateStringToLong((String) fres.get("date").asResource().getValue(), true)
+                        (Long) fres.get("date").asResource().getValue()
                 );
 
                 resultReporter.report(0, result, operation);
@@ -319,14 +295,14 @@ public class GraknShortQueryHandlers {
             List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
             if (results.size() > 0) {
-                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> dateStringToLong(resource(map, "date"), true)).reversed()
+                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
                         .thenComparingLong(map -> resource(map, "pid"));
 
                 List<LdbcShortQuery7MessageRepliesResult> result = results.stream()
                         .sorted(ugly)
                         .map(map -> new LdbcShortQuery7MessageRepliesResult(resource(map, "cid"),
                                 resource(map, "content"),
-                                dateStringToLong(resource(map, "date"), true),
+                                resource(map, "date"),
                                 resource(map, "pid"),
                                 resource(map, "fname"),
                                 resource(map, "lname"),
