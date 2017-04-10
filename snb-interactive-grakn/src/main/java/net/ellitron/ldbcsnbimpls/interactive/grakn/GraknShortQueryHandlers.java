@@ -86,7 +86,7 @@ public class GraknShortQueryHandlers {
                         "$person isa person has person-id " + operation.personId() + "; " +
                         "($person, $message) isa has-creator; " +
                         "$message has creation-date $date has message-id $messageId; " +
-                        "($message, $originalPost) isa original-post; " +
+                        "($message, $originalPost) isa reply-of; " +
                         "$originalPost has message-id $opId;" +
                         "($originalPost, $person2) isa has-creator; " +
                         "$person2 has person-id $authorId has first-name $fname has last-name $lname; ";
