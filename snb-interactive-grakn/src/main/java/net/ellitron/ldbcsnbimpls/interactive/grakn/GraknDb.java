@@ -1,6 +1,5 @@
 package net.ellitron.ldbcsnbimpls.interactive.grakn;
 
-import ai.grakn.GraknGraph;
 import com.ldbc.driver.Db;
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
