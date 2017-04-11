@@ -84,11 +84,11 @@ public class GraknShortQueryHandlers {
 
                 String query = "match " +
                         "$person isa person has person-id " + operation.personId() + "; " +
-                        "($person, $message) isa has-creator; " +
+                        "(creator: $person, product: $message) isa has-creator; " +
                         "$message has creation-date $date has message-id $messageId; " +
-                        "($message, $originalPost) isa reply-of; " +
+                        "(reply: $message, original: $originalPost) isa reply-of; " +
                         "$originalPost has message-id $opId;" +
-                        "($originalPost, $person2) isa has-creator; " +
+                        "(product: $originalPost, creator: $person2) isa has-creator; " +
                         "$person2 has person-id $authorId has first-name $fname has last-name $lname; ";
 
                 List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
@@ -133,7 +133,7 @@ public class GraknShortQueryHandlers {
 
                 String query = "match " +
                         "$person isa person has person-id " + operation.personId() + "; " +
-                        "($person, $friend) isa knows has creation-date $date; " +
+                        "(friend: $person, friend: $friend) isa knows has creation-date $date; " +
                         "$friend has person-id $friendId has first-name $fname has last-name $lname; ";
 
 
@@ -298,10 +298,10 @@ public class GraknShortQueryHandlers {
             try (GraknGraph graph = session.open(GraknTxType.READ)) {
 
                 String query = "match $m isa message has message-id " + operation.messageId() + " ;" +
-                        "($m, $author1) isa has-creator; " +
-                        "($m, $comment) isa reply-of; " +
+                        "(product: $m, creator: $author1) isa has-creator; " +
+                        "(original: $m, reply: $comment) isa reply-of; " +
                         "$comment has message-id $cid has content $content has creation-date $date; " +
-                        "($comment, $author2) isa has-creator; " +
+                        "(product: $comment, creator: $author2) isa has-creator; " +
                         "$author2 has person-id $pid, has first-name $fname, has last-name $lname;";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
@@ -328,7 +328,7 @@ public class GraknShortQueryHandlers {
 
         private boolean checkIfFriends(String author1, String author2, GraknGraph graph) {
             String query = "match $x id '" + author1 + "'; $y id '" + author2 + "';" +
-                    "($x, $y) isa knows; ask;";
+                    "(friend: $x, friend:  $y) isa knows; ask;";
             return graph.graql().<AskQuery>parse(query).execute();
         }
 
