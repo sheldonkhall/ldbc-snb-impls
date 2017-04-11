@@ -60,7 +60,7 @@ public class GraknUpdateQueryHandlers {
                 }
 
                 for (String email : operation.emails()) {
-                    query.append("has emails '" + email + "' ");
+                    query.append("has email '" + email + "' ");
                 }
 
                 query.append(interests);
