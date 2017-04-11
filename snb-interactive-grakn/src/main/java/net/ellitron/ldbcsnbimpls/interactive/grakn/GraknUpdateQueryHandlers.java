@@ -220,7 +220,7 @@ public class GraknUpdateQueryHandlers {
                 if (operation.imageFile().length() > 0) {
                     query.append("has image-file '" + operation.imageFile() + "'; ");
                 } else {
-                    query.append(" has content '" + operation.content() + "'; ");
+                    query.append(" has content \"" + operation.content() + "\"; ");
                 }
                 query.append("(product: $post, creator:  $author) isa has-creator; ");
                 query.append("(located: $post, region: $country) isa is-located-in; ");
@@ -264,7 +264,7 @@ public class GraknUpdateQueryHandlers {
                 }
 
                 String insertQ = "insert $comment isa comment has message-id " + operation.commentId() + " " +
-                        "has content '" + operation.content() + "' " +
+                        "has content \"" + operation.content() + "\" " +
                         "has location-ip '" + operation.locationIp() + "' " +
                         "has browser-used '" + operation.browserUsed() + "' " +
                         "has creation-date  " + operation.creationDate().getTime() + "  " +
