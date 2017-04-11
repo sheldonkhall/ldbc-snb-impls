@@ -47,7 +47,7 @@ public class GraknUpdateQueryHandlers {
                         "$x isa person has person-id " + operation.personId() +
                         " has first-name '" + operation.personFirstName() + "' " +
                         "has last-name '" + operation.personLastName() + "' " +
-                        "has birthday " + operation.birthday().getTime() +
+                        "has birth-day " + operation.birthday().getTime() +
                         " has creation-date " + operation.creationDate().getTime() +
                         " has location-ip '" + operation.locationIp() + "' " +
                         "has browser-used '" + operation.browserUsed() + "' " +

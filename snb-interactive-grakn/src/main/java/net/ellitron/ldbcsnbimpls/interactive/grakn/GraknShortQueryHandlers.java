@@ -39,7 +39,7 @@ public class GraknShortQueryHandlers {
                                 operation.personId() +
                                 " has first-name $first-name" +
                                 " has last-name $last-name" +
-                                " has birth-day $birthday" +
+                                " has birth-day $birth-day" +
                                 " has location-ip $location-ip" +
                                 " has browser-used $browser-used" +
                                 " has gender $gender" +
@@ -55,7 +55,7 @@ public class GraknShortQueryHandlers {
                             new LdbcShortQuery1PersonProfileResult(
                                     (String) fres.get("first-name").asResource().getValue(),
                                     (String) fres.get("last-name").asResource().getValue(),
-                                    (Long) fres.get("birthday").asResource().getValue(),
+                                    (Long) fres.get("birth-day").asResource().getValue(),
                                     (String) fres.get("location-ip").asResource().getValue(),
                                     (String) fres.get("browser-used").asResource().getValue(),
                                     (Long) fres.get("placeID").asResource().getValue(),
