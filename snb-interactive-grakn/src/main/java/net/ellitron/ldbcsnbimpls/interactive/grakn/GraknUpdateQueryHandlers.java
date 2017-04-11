@@ -25,7 +25,7 @@ public class GraknUpdateQueryHandlers {
                 StringBuilder interests = new StringBuilder();
                 StringBuilder workAndStudyPlaces = new StringBuilder();
 
-                query.append("$city has city-id " + operation.cityId() + "; ");
+                query.append("$city has place-id " + operation.cityId() + "; ");
 
 
                 for (Long tag : operation.tagIds()) {
