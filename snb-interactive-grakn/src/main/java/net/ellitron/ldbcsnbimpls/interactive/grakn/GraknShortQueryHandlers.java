@@ -93,7 +93,7 @@ public class GraknShortQueryHandlers {
 
                 List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
-                if (results.size() > 0) {
+
                     Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
                             .thenComparingLong(map -> resource(map, "messageId")).reversed();
 
@@ -109,9 +109,7 @@ public class GraknShortQueryHandlers {
                             .collect(Collectors.toList());
 
                     resultReporter.report(0, result, operation);
-                } else {
-                    resultReporter.report(0, null, operation);
-                }
+
 
             }
 
@@ -141,7 +139,7 @@ public class GraknShortQueryHandlers {
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
-                if (results.size() > 0) {
+
                     Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
                             .thenComparingLong(map -> resource(map, "friendId"));
 
@@ -154,9 +152,7 @@ public class GraknShortQueryHandlers {
                             .collect(Collectors.toList());
 
                     resultReporter.report(0, result, operation);
-                } else {
-                    resultReporter.report(0, null, operation);
-                }
+
             }
         }
 
@@ -310,7 +306,6 @@ public class GraknShortQueryHandlers {
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
-                if (results.size() > 0) {
                     Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
                             .thenComparingLong(map -> resource(map, "pid"));
 
@@ -326,9 +321,7 @@ public class GraknShortQueryHandlers {
                             .collect(Collectors.toList());
 
                     resultReporter.report(0, result, operation);
-                } else {
-                    resultReporter.report(0, null, operation);
-                }
+
             }
 
         }
