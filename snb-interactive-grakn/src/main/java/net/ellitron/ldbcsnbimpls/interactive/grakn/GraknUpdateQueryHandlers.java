@@ -63,6 +63,8 @@ public class GraknUpdateQueryHandlers {
                     query.append("has email '" + email + "' ");
                 }
 
+                query.append("; ");
+
                 query.append(interests);
 
                 query.append("(located: $x, region: $city) isa is-located-in;");
