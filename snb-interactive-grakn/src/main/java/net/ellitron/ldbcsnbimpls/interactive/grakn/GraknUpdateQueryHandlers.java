@@ -46,9 +46,9 @@ public class GraknUpdateQueryHandlers {
                 String baseInsertQuery = "insert " +
                         "$x isa person has person-id " + operation.personId() +
                         " has first-name '" + operation.personFirstName() + "' " +
-                        "has last-name '" + operation.personLastName() + "' '" +
+                        "has last-name '" + operation.personLastName() + "' " +
                         "has birthday " + operation.birthday().getTime() +
-                        " has creation-date" + operation.creationDate().getTime() +
+                        " has creation-date " + operation.creationDate().getTime() +
                         " has location-ip '" + operation.locationIp() + "' " +
                         "has browser-used '" + operation.browserUsed() + "' " +
                         "has gender '" + operation.gender() + " ";
