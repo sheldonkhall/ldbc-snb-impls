@@ -40,7 +40,7 @@ public class GraknUpdateQueryHandlers {
 
                 for (LdbcUpdate1AddPerson.Organization org : operation.workAt()) {
                     query.append("$" + org.organizationId() + " isa company has organisation-id " + org.organizationId() + "; ");
-                    workAndStudyPlaces.append("(employee: $x, employer: $" + org.organizationId() + ") isa works-at has workFrom " + org.year() + "; ");
+                    workAndStudyPlaces.append("(employee: $x, employer: $" + org.organizationId() + ") isa work-at has workFrom " + org.year() + "; ");
                 }
 
                 String baseInsertQuery = "insert " +
