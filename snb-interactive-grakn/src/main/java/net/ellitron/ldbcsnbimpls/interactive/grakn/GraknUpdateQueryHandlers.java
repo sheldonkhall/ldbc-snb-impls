@@ -93,7 +93,7 @@ public class GraknUpdateQueryHandlers {
                 String query = "match " +
                         "$x has person-id " + operation.personId() + "; " +
                         "$y has message-id " + operation.postId() + "; " +
-                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate().getTime() + ";";
+                        "insert (admirer: $x, like: $y) isa likes has creation-date " + operation.creationDate().getTime() + ";";
 
                 graph.graql().<InsertQuery>parse(query).execute();
                 graph.commit();
