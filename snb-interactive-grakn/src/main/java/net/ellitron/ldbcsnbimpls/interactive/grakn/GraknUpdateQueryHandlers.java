@@ -51,7 +51,7 @@ public class GraknUpdateQueryHandlers {
                         " has creation-date " + operation.creationDate().getTime() +
                         " has location-ip '" + operation.locationIp() + "' " +
                         "has browser-used '" + operation.browserUsed() + "' " +
-                        "has gender '" + operation.gender() + " ";
+                        "has gender '" + operation.gender() + "' ";
 
                 query.append(baseInsertQuery);
 
