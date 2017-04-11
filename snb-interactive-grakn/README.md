@@ -1,6 +1,10 @@
 Grakn LDBC SNB Interactive Workload Implementation
 ==================================================
 
+# Prerequisites
+
+You need to have Grakn running on your machine and also installed using maven.
+
 # Generating the validation data
 
 In order to generate the validation data clone these two git repos:
@@ -32,8 +36,31 @@ In order to run the validation you need this additional git repo:
 
 `git@github.com:ldbc/ldbc_driver.git`
 
-This repo contains the driver for executing the queries. The implementations of the driver interfaces are stored in this repository:
+This repo contains the driver for executing the queries. Before proceeding this driver should be installed using:
+
+`mvn install -DskipTests`
+
+The implementations of the driver interfaces are stored in this repository:
 
 `git@github.com:mikonapoli/ldbc-snb-impls.git`
 
 in the `short-query-handlers` branch.
+These implementations need to be compiled using
+
+`mvn clean compile assembly:single`
+
+There are some configuration options that need to be set in order to run the benchmark.
+These are contained in the file `$LDBC_SNB_INTERACTIVE_VALIDATION/neo4j/readwrite_neo4j--ldbc_driver_config--db_validation.properties`.
+The two properties that should be set are:
+
+`validate_database=$VALIDATION/validation_set/validation_params.csv`
+
+`ldbc.snb.interactive.parameters_dir=$VALIDATION/validation_set`
+
+Last of all execute the validation
+
+`java -cp $LDBC_DRIVER/target/jeeves-0.3-SNAPSHOT.jar:$LDBC_SNB_IMPLS/snb-interactive-grakn/target/snb-interactive-grakn-0.0.1-jar-with-dependencies.jar com.ldbc.driver.Client -db net.ellitron.ldbcsnbimpls.interactive.grakn.GraknDb -P $LDBC_SNB_INTERACTIVE_VALIDATION/neo4j/readwrite_neo4j--ldbc_driver_config--db_validation.properties`
+
+# Important Notes
+
+Don't forget that some of these queries mutate the graph and so it must be reloaded/restored to the original state before running again.
