@@ -115,7 +115,7 @@ public class GraknUpdateQueryHandlers {
                 String query = "match " +
                         "$x has person-id " + operation.personId() + "; " +
                         "$y has message-id " + operation.commentId() + "; " +
-                        "insert (admirer: $x, like: $y) isa person-likes has creation-date " + operation.creationDate().getTime() + ";";
+                        "insert (admirer: $x, like: $y) isa likes has creation-date " + operation.creationDate().getTime() + ";";
 
                 graph.graql().<InsertQuery>parse(query).execute();
                 graph.commit();
@@ -198,9 +198,9 @@ public class GraknUpdateQueryHandlers {
                 StringBuilder query = new StringBuilder("match ");
                 StringBuilder tags = new StringBuilder();
 
-                query.append("$author has person-id" + operation.authorPersonId() + "; ");
-                query.append("$forum has forum-id" + operation.forumId() + "; ");
-                query.append("$country has country-id " + operation.countryId() + "; ");
+                query.append("$author has person-id " + operation.authorPersonId() + "; ");
+                query.append("$forum has forum-id " + operation.forumId() + "; ");
+                query.append("$country has place-id " + operation.countryId() + "; ");
 
                 for (long tag : operation.tagIds()) {
                     query.append("$" + tag + " has tag-id " + tag + "; ");
@@ -221,7 +221,7 @@ public class GraknUpdateQueryHandlers {
                     query.append(" has content '" + operation.content() + "'; ");
                 }
                 query.append("(product: $post, creator:  $author) isa has-creator; ");
-                query.append("(located: $post, region: $country) isa located-in; ");
+                query.append("(located: $post, region: $country) isa is-located-in; ");
                 query.append("(contained: $post, container: $forum) isa container-of; ");
 
                 query.append(tags);
@@ -248,13 +248,13 @@ public class GraknUpdateQueryHandlers {
                 StringBuilder query = new StringBuilder("match ");
                 StringBuilder tags = new StringBuilder();
 
-                query.append("$author has person-id" + operation.authorPersonId() + "; ");
+                query.append("$author has person-id " + operation.authorPersonId() + "; ");
                 if (operation.replyToPostId() != -1) {
-                    query.append("$original has message-id" + operation.replyToPostId() + "; ");
+                    query.append("$original has message-id " + operation.replyToPostId() + "; ");
                 } else {
-                    query.append("$original has message-id" + operation.replyToCommentId() + "; ");
+                    query.append("$original has message-id " + operation.replyToCommentId() + "; ");
                 }
-                query.append("$country has country-id " + operation.countryId() + "; ");
+                query.append("$country has place-id " + operation.countryId() + "; ");
 
                 for (long tag : operation.tagIds()) {
                     query.append("$" + tag + " has tag-id " + tag + "; ");
@@ -272,7 +272,7 @@ public class GraknUpdateQueryHandlers {
 
 
                 query.append("(product: $comment, creator: $author) isa has-creator; ");
-                query.append("(located: $comment, region: $country) isa located-in; ");
+                query.append("(located: $comment, region: $country) isa is-located-in; ");
                 query.append("(reply: $comment, original: $original) isa reply-of; ");
 
                 query.append(tags);
