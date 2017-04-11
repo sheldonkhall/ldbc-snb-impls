@@ -178,14 +178,26 @@ public class GraknShortQueryHandlers {
 
                 String query = "match" +
                         "$m isa message has message-id " + operation.messageId() + ";" +
-                        "$m has creation-date $date has content $content or has image-file $content;";
+                        "$m has creation-date $date has content $content has image-file $imageFile;";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
+
                 if (results.size() > 0) {
                     Map<String, Concept> fres = results.get(0);
+
+                    String c = (String) fres.get("content").asResource().getValue();
+                    String im = (String) fres.get("imageFile").asResource().getValue();
+                    String cr;
+
+                    if (c.length() > 0) {
+                        cr = c;
+                    } else  {
+                        cr = im;
+                    }
+
                     LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
-                            (String) fres.get("content").asResource().getValue(),
+                            cr,
                             (Long) fres.get("date").asResource().getValue()
                     );
 
