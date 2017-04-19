@@ -303,9 +303,13 @@ public class GraknShortQueryHandlers {
                 String query = "match $m isa message has message-id " + operation.messageId() + " ;" +
                         "(product: $m, creator: $author1) isa has-creator; " +
                         "(original: $m, reply: $comment) isa reply-of; " +
-                        "$comment has message-id $cid has content $content has creation-date $date; " +
+                        "($comment, $cid) isa key-message-id; " +
+                        "($comment, $content) isa has-content; " +
+                        "($comment, $date) isa has-creation-date; " +
                         "(product: $comment, creator: $author2) isa has-creator; " +
-                        "$author2 has person-id $pid, has first-name $fname, has last-name $lname;";
+                        "($author2, $pid) isa key-person-id; " +
+                        "($author2, $fname) isa has-first-name; " +
+                        "($author2, $lname) isa has-last-name;";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
