@@ -35,7 +35,7 @@ public class GraknShortQueryHandlers {
 
                 String query =
                         "match" +
-                                "$person isa person has person-id " +
+                                "$person has person-id " +
                                 operation.personId() + "; " +
                                 "($person, $first-name) isa has-first-name; " +
                                 "($person, $last-name) isa has-last-name; " +
@@ -83,7 +83,7 @@ public class GraknShortQueryHandlers {
             try (GraknGraph graph = session.open(GraknTxType.READ)) {
 
                 String query = "match " +
-                        "$person isa person has person-id " + operation.personId() + "; " +
+                        "$person has person-id " + operation.personId() + "; " +
                         "(creator: $person, product: $message) isa has-creator; " +
                         "($message, $date) isa has-creation-date; " +
                         "($message, $messageId) isa key-message-id; " +
@@ -135,7 +135,7 @@ public class GraknShortQueryHandlers {
             try (GraknGraph graph = session.open(GraknTxType.READ)) {
 
                 String query = "match " +
-                        "$person isa person has person-id " + operation.personId() + "; " +
+                        "$person has person-id " + operation.personId() + "; " +
                         "(friend: $person, friend: $friend) isa knows has creation-date $date; " +
                         "($friend, $friendId) isa key-person-id; " +
                         "($friend, $fname) isa has-first-name;" +
@@ -218,7 +218,7 @@ public class GraknShortQueryHandlers {
             try (GraknGraph graph = session.open(GraknTxType.READ)) {
 
                 String query = "match " +
-                        " $m isa message has message-id " + operation.messageId() + ";" +
+                        " $m has message-id " + operation.messageId() + ";" +
                         " (product: $m , creator: $person) isa has-creator;" +
                         " ($person, $fname) isa has-first-name;" +
                         " ($person, $lname) isa has-last-name;" +
