@@ -259,9 +259,12 @@ public class GraknShortQueryHandlers {
                 String query = "match " +
                         "$m isa message has message-id " + operation.messageId() + "; " +
                         "(contained: $m , container: $forum) isa container-of;" +
-                        "$forum has forum-id $fid, has title $title; " +
+                        "($forum, $fid) isa  key-forum-id; " +
+                        "($forum, $title) isa has-title; " +
                         "(moderated: $forum, moderator: $mod) isa has-moderator; " +
-                        "$mod has person-id $modid, has first-name $fname, has last-name $lname;";
+                        "($mod, $modid) isa key-person-id; " +
+                        "($mod, $fname) isa has-first-name; " +
+                        "($mod, $lname) isa has-last-name;";
 
                 List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
