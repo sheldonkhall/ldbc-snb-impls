@@ -36,16 +36,16 @@ public class GraknShortQueryHandlers {
                 String query =
                         "match" +
                                 "$person isa person has person-id " +
-                                operation.personId() +
-                                " has first-name $first-name" +
-                                " has last-name $last-name" +
-                                " has birth-day $birth-day" +
-                                " has location-ip $location-ip" +
-                                " has browser-used $browser-used" +
-                                " has gender $gender" +
-                                " has creation-date $creation-date;" +
-                                " (located: $person, region: $place) isa is-located-in;" +
-                                " $place has place-id $placeID;";
+                                operation.personId() + "; " +
+                                "($person, $first-name) isa has-first-name; " +
+                                "($person, $last-name) isa has-last-name; " +
+                                "($person, $birth-day) isa has-birth-day; " +
+                                "($person, $location-ip) isa has-location-ip; " +
+                                "($person, $browser-used) isa has-browser-used; " +
+                                "($person, $gender) isa has-gender; " +
+                                "($person, $creation-date) isa has-creation-date; " +
+                                "(located: $person, region: $place) isa is-located-in; " +
+                                "($place, $placeID) isa key-place-id;";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
                 if (results.size() > 0) {
