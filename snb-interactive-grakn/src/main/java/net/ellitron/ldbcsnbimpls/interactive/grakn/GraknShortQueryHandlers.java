@@ -245,7 +245,7 @@ public class GraknShortQueryHandlers {
     }
 
 
-    // TODO: The following requires a rule to properly work
+    // The following requires a rule to properly work
     public static class LdbcShortQuery6MessageForumHandler implements
             OperationHandler<LdbcShortQuery6MessageForum, GraknDbConnectionState> {
 
