@@ -92,7 +92,7 @@ public class GraknShortQueryHandlers {
                         "(product: $originalPost, creator: $person2) isa has-creator; " +
                         "($person2, $authorId) isa key-person-id; " +
                         "($person2, $fname) isa has-first-name;" +
-                        "($person2, $lname) isa has-last-name; ";
+                        "($person2, $lname) isa has-last-name;";
 
                 List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
@@ -138,8 +138,8 @@ public class GraknShortQueryHandlers {
                         "$person has person-id " + operation.personId() + "; " +
                         "(friend: $person, friend: $friend) isa knows has creation-date $date; " +
                         "($friend, $friendId) isa key-person-id; " +
-                        "($friend, $fname) isa has-first-name;" +
-                        "($friend, $lname) isa has-last-name; ";
+                        "($friend, $fname) isa has-first-name; " +
+                        "($friend, $lname) isa has-last-name;";
 
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
