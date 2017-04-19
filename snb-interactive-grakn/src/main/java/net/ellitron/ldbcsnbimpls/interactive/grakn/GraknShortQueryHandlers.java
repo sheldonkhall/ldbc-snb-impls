@@ -177,9 +177,9 @@ public class GraknShortQueryHandlers {
             GraknSession session = dbConnectionState.session();
             try (GraknGraph graph = session.open(GraknTxType.READ)) {
 
-                String query = "match" +
+                String query = "match " +
                         "$m has message-id " + operation.messageId() + "; " +
-                        "($m, $date) isa has-creation-date;" +
+                        "($m, $date) isa has-creation-date; " +
                         "($m, $content) isa has-content or ($m, $content) isa has-image-file;";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
