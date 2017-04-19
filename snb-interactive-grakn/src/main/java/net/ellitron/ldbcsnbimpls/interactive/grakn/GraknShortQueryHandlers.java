@@ -220,7 +220,9 @@ public class GraknShortQueryHandlers {
                 String query = "match " +
                         " $m isa message has message-id " + operation.messageId() + ";" +
                         " (product: $m , creator: $person) isa has-creator;" +
-                        " $person has first-name $fname has last-name $lname has person-id $pID;";
+                        " ($person, $fname) isa has-first-name;" +
+                        " ($person, $lname) isa has-last-name;" +
+                        " ($person, $pID) isa key-person-id;";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
