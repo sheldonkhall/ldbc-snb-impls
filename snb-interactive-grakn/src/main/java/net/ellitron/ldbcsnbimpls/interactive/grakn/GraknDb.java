@@ -21,12 +21,12 @@ public class GraknDb extends Db {
         connectionState = new GraknDbConnectionState(properties);
 
         registerOperationHandler(LdbcShortQuery1PersonProfile.class, GraknShortQueryHandlers.LdbcShortQuery1PersonProfileHandler.class);
-//        registerOperationHandler(LdbcShortQuery2PersonPosts.class, GraknShortQueryHandlers.LdbcShortQuery2PersonPostsHandler.class);
-//        registerOperationHandler(LdbcShortQuery3PersonFriends.class, GraknShortQueryHandlers.LdbcShortQuery3PersonFriendsHandler.class);
+        registerOperationHandler(LdbcShortQuery2PersonPosts.class, GraknShortQueryHandlers.LdbcShortQuery2PersonPostsHandler.class);
+        registerOperationHandler(LdbcShortQuery3PersonFriends.class, GraknShortQueryHandlers.LdbcShortQuery3PersonFriendsHandler.class);
         registerOperationHandler(LdbcShortQuery4MessageContent.class, GraknShortQueryHandlers.LdbcShortQuery4MessageContentHandler.class);
         registerOperationHandler(LdbcShortQuery5MessageCreator.class, GraknShortQueryHandlers.LdbcShortQuery5MessageCreatorHandler.class);
-//        registerOperationHandler(LdbcShortQuery6MessageForum.class, GraknShortQueryHandlers.LdbcShortQuery6MessageForumHandler.class);
-//        registerOperationHandler(LdbcShortQuery7MessageReplies.class, GraknShortQueryHandlers.LdbcShortQuery7MessageRepliesHandler.class);
+        registerOperationHandler(LdbcShortQuery6MessageForum.class, GraknShortQueryHandlers.LdbcShortQuery6MessageForumHandler.class);
+        registerOperationHandler(LdbcShortQuery7MessageReplies.class, GraknShortQueryHandlers.LdbcShortQuery7MessageRepliesHandler.class);
 
         registerOperationHandler(LdbcUpdate1AddPerson.class, GraknUpdateQueryHandlers.LdbcUpdate1AddPersonHandler.class);
         registerOperationHandler(LdbcUpdate2AddPostLike.class, GraknUpdateQueryHandlers.LdbcUpdate2AddPostLikeHandler.class);
