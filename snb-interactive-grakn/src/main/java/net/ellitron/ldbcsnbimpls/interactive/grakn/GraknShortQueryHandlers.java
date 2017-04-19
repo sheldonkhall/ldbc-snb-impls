@@ -179,7 +179,8 @@ public class GraknShortQueryHandlers {
 
                 String query = "match" +
                         "$m isa message has message-id " + operation.messageId() +
-                        " has creation-date $date; $m has content $content or $m has image-file $content;";
+                        "($m, $date) isa has-creation-date;" +
+                        "($m, $content) isa has-content or ($m, $content) isa has-image-file;";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
