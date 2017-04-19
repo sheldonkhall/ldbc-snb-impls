@@ -185,13 +185,11 @@ public class GraknShortQueryHandlers {
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
 
-                if (results.size() == 1) {
+                if (results.size() > 0) {
                     Map<String, Concept> fres = results.get(0);
 
-                    String cr = (String) fres.get("content").asResource().getValue();
-
                     LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
-                            cr,
+                            (String) fres.get("content").asResource().getValue(),
                             (Long) fres.get("date").asResource().getValue()
                     );
 
@@ -226,7 +224,7 @@ public class GraknShortQueryHandlers {
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
-                if (results.size() == 1) {
+                if (results.size() >= 1) {
                     Map<String, Concept> fres = results.get(0);
                     LdbcShortQuery5MessageCreatorResult result = new LdbcShortQuery5MessageCreatorResult(
                             (Long) fres.get("pID").asResource().getValue(),
