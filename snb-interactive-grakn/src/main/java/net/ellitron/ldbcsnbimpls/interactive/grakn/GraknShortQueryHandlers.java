@@ -87,7 +87,7 @@ public class GraknShortQueryHandlers {
                         "(creator: $person, product: $message) isa has-creator; " +
                         "($message, $date) isa has-creation-date; " +
                         "($message, $messageId) isa key-message-id; " +
-                        "(reply: $message, original: $originalPost) isa reply-of; " +
+                        "(reply: $message, original: $originalPost) isa original-post; " +
                         "($originalPost, $opId) isa key-message-id;" +
                         "(product: $originalPost, creator: $person2) isa has-creator; " +
                         "($person2, $authorId) isa key-person-id; " +
