@@ -45,7 +45,7 @@ public class GraknShortQueryHandlers {
                                 "($person, $gender) isa has-gender; " +
                                 "($person, $creation-date) isa has-creation-date; " +
                                 "(located: $person, region: $place) isa is-located-in; " +
-                                "($place, $placeID) isa key-place-id;";
+                                "($place, $placeID) isa key-place-id; ";
 
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
                 if (results.size() > 0) {
@@ -91,8 +91,9 @@ public class GraknShortQueryHandlers {
                         "($originalPost, $opId) isa key-message-id;" +
                         "(product: $originalPost, creator: $person2) isa has-creator; " +
                         "($person2, $authorId) isa key-person-id; " +
-                        "($person2, $fname) isa has-first-name;" +
-                        "($person2, $lname) isa has-last-name;";
+                        "($person2, $fname) isa has-first-name; " +
+                        "($person2, $lname) isa has-last-name; " +
+                        "($message, $content) isa has-content or ($message, $content) isa has-image-file;";
 
                 List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
