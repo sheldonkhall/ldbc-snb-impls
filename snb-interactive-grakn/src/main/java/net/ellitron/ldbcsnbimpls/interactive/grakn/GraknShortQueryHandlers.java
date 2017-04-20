@@ -145,7 +145,7 @@ public class GraknShortQueryHandlers {
                 List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
 
 
-                    Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
+                    Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date"))
                             .thenComparingLong(map -> resource(map, "friendId")).reversed();
 
                     List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
@@ -157,6 +157,7 @@ public class GraknShortQueryHandlers {
                             .collect(Collectors.toList());
 
                     resultReporter.report(0, result, operation);
+
 
             }
         }
