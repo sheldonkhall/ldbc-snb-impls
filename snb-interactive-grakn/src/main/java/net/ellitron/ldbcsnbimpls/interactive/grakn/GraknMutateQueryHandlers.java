@@ -5,6 +5,7 @@ import ai.grakn.GraknSession;
 import ai.grakn.GraknTxType;
 import ai.grakn.concept.Concept;
 import ai.grakn.graql.MatchQuery;
+import ai.grakn.graql.admin.Answer;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
 import com.ldbc.driver.ResultReporter;
@@ -37,10 +38,10 @@ public class GraknMutateQueryHandlers {
                         "$friend has person-id $friendId has first-name $fname has last-name $lname; ";
 
 
-                List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
 
-                Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
+                Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "date")).reversed()
                         .thenComparingLong(map -> resource(map, "friendId"));
 
                 List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
@@ -56,7 +57,7 @@ public class GraknMutateQueryHandlers {
             }
         }
 
-        private <T> T resource(Map<String, Concept> result, String name) {
+        private <T> T resource(Answer result, String name) {
             return result.get(name).<T>asResource().getValue();
         }
     }

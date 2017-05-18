@@ -7,11 +7,14 @@ import ai.grakn.GraknTxType;
 import ai.grakn.concept.Concept;
 import ai.grakn.graql.AskQuery;
 import ai.grakn.graql.MatchQuery;
+import ai.grakn.graql.admin.Answer;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
 import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,20 +50,20 @@ public class GraknShortQueryHandlers {
                                 "(located: $person, region: $place) isa is-located-in; " +
                                 "($place, $placeID) isa key-place-id; ";
 
-                List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
                 if (results.size() > 0) {
-                    Map<String, Concept> fres = results.get(0);
+                    Answer fres = results.get(0);
 
                     LdbcShortQuery1PersonProfileResult result =
                             new LdbcShortQuery1PersonProfileResult(
                                     (String) fres.get("first-name").asResource().getValue(),
                                     (String) fres.get("last-name").asResource().getValue(),
-                                    (Long) fres.get("birth-day").asResource().getValue(),
+                                    ((LocalDateTime) fres.get("birth-day").asResource().getValue()).toEpochSecond(ZoneOffset.UTC),
                                     (String) fres.get("location-ip").asResource().getValue(),
                                     (String) fres.get("browser-used").asResource().getValue(),
                                     (Long) fres.get("placeID").asResource().getValue(),
                                     (String) fres.get("gender").asResource().getValue(),
-                                    (Long) fres.get("creation-date").asResource().getValue());
+                                    ((LocalDateTime) fres.get("creation-date").asResource().getValue()).toEpochSecond(ZoneOffset.UTC));
 
                     resultReporter.report(0, result, operation);
 
@@ -87,7 +90,7 @@ public class GraknShortQueryHandlers {
                         "(creator: $person, product: $message) isa has-creator; " +
                         "($message, $date) isa has-creation-date; " +
                         "($message, $messageId) isa key-message-id; " +
-                        "(response: $message, first-post: $originalPost) isa original-post; " +
+                        "(reply: $message, original: $originalPost) isa original-post; " +
                         "($originalPost, $opId) isa key-message-id;" +
                         "(product: $originalPost, creator: $person2) isa has-creator; " +
                         "($person2, $authorId) isa key-person-id; " +
@@ -95,15 +98,15 @@ public class GraknShortQueryHandlers {
                         "($person2, $lname) isa has-last-name; " +
                         "($message, $content) isa has-content or ($message, $content) isa has-image-file;";
 
-                List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
 
-                    Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
+                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "date")).reversed()
                             .thenComparingLong(map -> resource(map, "messageId")).reversed();
 
                     List<LdbcShortQuery2PersonPostsResult> result = results.stream()
                             .sorted(ugly).limit(10)
-                            .map(map -> new LdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
+                            .map(map -> new GraknLdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
                                     resource(map, "content"),
                                     resource(map, "date"),
                                     resource(map, "opId"),
@@ -119,7 +122,7 @@ public class GraknShortQueryHandlers {
 
         }
 
-        private <T> T resource(Map<String, Concept> result, String name) {
+        private <T> T resource(Answer result, String name) {
             return result.get(name).<T>asResource().getValue();
         }
     }
@@ -143,10 +146,10 @@ public class GraknShortQueryHandlers {
                         "($friend, $lname) isa has-last-name;";
 
 
-                List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
 
-                    Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
+                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "date")).reversed()
                             .thenComparingLong(map -> resource(map, "friendId"));
 
                     List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
@@ -163,7 +166,7 @@ public class GraknShortQueryHandlers {
             }
         }
 
-        private <T> T resource(Map<String, Concept> result, String name) {
+        private <T> T resource(Answer result, String name) {
             return result.get(name).<T>asResource().getValue();
         }
     }
@@ -184,11 +187,11 @@ public class GraknShortQueryHandlers {
                         "($m, $date) isa has-creation-date; " +
                         "($m, $content) isa has-content or ($m, $content) isa has-image-file;";
 
-                List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
 
                 if (results.size() > 0) {
-                    Map<String, Concept> fres = results.get(0);
+                    Answer fres = results.get(0);
 
                     LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
                             (String) fres.get("content").asResource().getValue(),
@@ -224,10 +227,10 @@ public class GraknShortQueryHandlers {
                         " ($person, $lname) isa has-last-name;" +
                         " ($person, $pID) isa key-person-id;";
 
-                List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
                 if (results.size() >= 1) {
-                    Map<String, Concept> fres = results.get(0);
+                    Answer fres = results.get(0);
                     LdbcShortQuery5MessageCreatorResult result = new LdbcShortQuery5MessageCreatorResult(
                             (Long) fres.get("pID").asResource().getValue(),
                             (String) fres.get("fname").asResource().getValue(),
@@ -267,10 +270,10 @@ public class GraknShortQueryHandlers {
                         "($mod, $lname) isa has-last-name;";
 
 
-                List<Map<String, Concept>> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
                 if (results.size() > 0) {
-                    Map<String, Concept> fres = results.get(0);
+                    Answer fres = results.get(0);
                     LdbcShortQuery6MessageForumResult result = new LdbcShortQuery6MessageForumResult(
                             (Long) fres.get("fid").asResource().getValue(),
                             (String) fres.get("title").asResource().getValue(),
@@ -312,9 +315,9 @@ public class GraknShortQueryHandlers {
                         "($author2, $fname) isa has-first-name; " +
                         "($author2, $lname) isa has-last-name;";
 
-                List<Map<String, Concept>> results = graph.graql().<MatchQuery>parse(query).execute();
+                List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
-                    Comparator<Map<String, Concept>> ugly = Comparator.<Map<String, Concept>>comparingLong(map -> resource(map, "date")).reversed()
+                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "date")).reversed()
                             .thenComparingLong(map -> resource(map, "pid"));
 
                     List<LdbcShortQuery7MessageRepliesResult> result = results.stream()
@@ -340,11 +343,11 @@ public class GraknShortQueryHandlers {
             return graph.graql().<AskQuery>parse(query).execute();
         }
 
-        private String conceptId(Map<String, Concept> result, String name) {
+        private String conceptId(Answer result, String name) {
             return result.get(name).getId().toString();
         }
 
-        private <T> T resource(Map<String, Concept> result, String name) {
+        private <T> T resource(Answer result, String name) {
             return result.get(name).<T>asResource().getValue();
         }
     }
