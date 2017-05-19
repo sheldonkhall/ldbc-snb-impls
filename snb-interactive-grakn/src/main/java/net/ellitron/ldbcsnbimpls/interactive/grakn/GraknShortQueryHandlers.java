@@ -88,20 +88,20 @@ public class GraknShortQueryHandlers {
                 String query = "match " +
                         "$person has person-id " + operation.personId() + "; " +
                         "(creator: $person, product: $message) isa has-creator; " +
-                        "($message, $date) isa has-creation-date; " +
-                        "($message, $messageId) isa key-message-id; " +
+                        "$message has creation-date $date; " +
+                        "$message has message-id $messageId; " +
                         "(reply: $message, original: $originalPost) isa original-post; " +
-                        "($originalPost, $opId) isa key-message-id;" +
+                        "$originalPost has message-id $opId; " +
                         "(product: $originalPost, creator: $person2) isa has-creator; " +
-                        "($person2, $authorId) isa key-person-id; " +
-                        "($person2, $fname) isa has-first-name; " +
-                        "($person2, $lname) isa has-last-name; " +
-                        "($message, $content) isa has-content or ($message, $content) isa has-image-file;";
+                        "$person2 has person-id $authorId; " +
+                        "$person2 has first-name $fname; " +
+                        "$person2 has last-name $lname; " +
+                        "$message has content $content or $message has image-file $content;";
 
                 List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
 
-                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "date")).reversed()
+                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> ((LocalDateTime) resource(map, "date")).toEpochSecond(ZoneOffset.UTC)).reversed()
                             .thenComparingLong(map -> resource(map, "messageId")).reversed();
 
                     List<LdbcShortQuery2PersonPostsResult> result = results.stream()
