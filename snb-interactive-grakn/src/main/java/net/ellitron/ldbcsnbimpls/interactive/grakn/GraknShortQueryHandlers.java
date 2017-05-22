@@ -74,7 +74,7 @@ public class GraknShortQueryHandlers {
         }
     }
 
-
+    // The following requires a rule to properly work
     public static class LdbcShortQuery2PersonPostsHandler implements
             OperationHandler<LdbcShortQuery2PersonPosts, GraknDbConnectionState> {
 
@@ -90,33 +90,32 @@ public class GraknShortQueryHandlers {
                         "(creator: $person, product: $message) isa has-creator; " +
                         "$message has creation-date $date; " +
                         "$message has message-id $messageId; " +
-                        "(reply: $message, original: $originalPost) isa original-post; " +
+                        "$message has content $content or $message has image-file $content;" +
+                        "(child-message: $message, parent-message: $originalPost) isa original-post; " +
                         "$originalPost has message-id $opId; " +
                         "(product: $originalPost, creator: $person2) isa has-creator; " +
                         "$person2 has person-id $authorId; " +
                         "$person2 has first-name $fname; " +
                         "$person2 has last-name $lname; " +
-                        "$message has content $content or $message has image-file $content;";
+                        "order by $date desc;" +
+                        "limit " + String.valueOf(operation.limit()) + ";";
 
                 List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
+                Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "messageId")).reversed();
 
-                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> ((LocalDateTime) resource(map, "date")).toEpochSecond(ZoneOffset.UTC)).reversed()
-                            .thenComparingLong(map -> resource(map, "messageId")).reversed();
+                List<LdbcShortQuery2PersonPostsResult> result = results.stream()
+                        .sorted(ugly)
+                        .map(map -> new GraknLdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
+                                resource(map, "content"),
+                                resource(map, "date"),
+                                resource(map, "opId"),
+                                resource(map, "authorId"),
+                                resource(map, "fname"),
+                                resource(map, "lname")))
+                        .collect(Collectors.toList());
 
-                    List<LdbcShortQuery2PersonPostsResult> result = results.stream()
-                            .sorted(ugly).limit(10)
-                            .map(map -> new GraknLdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
-                                    resource(map, "content"),
-                                    resource(map, "date"),
-                                    resource(map, "opId"),
-                                    resource(map, "authorId"),
-                                    resource(map, "fname"),
-                                    resource(map, "lname")))
-                            .collect(Collectors.toList());
-
-                    resultReporter.report(0, result, operation);
-
+                resultReporter.report(0, result, operation);
 
             }
 
@@ -143,18 +142,18 @@ public class GraknShortQueryHandlers {
                         "(friend: $person, friend: $friend) isa knows has creation-date $date; " +
                         "($friend, $friendId) isa key-person-id; " +
                         "($friend, $fname) isa has-first-name; " +
-                        "($friend, $lname) isa has-last-name;";
+                        "($friend, $lname) isa has-last-name;" +
+                        "order by $date desc;";
 
 
                 List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
 
-                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "date")).reversed()
-                            .thenComparingLong(map -> resource(map, "friendId"));
+                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "friendId"));
 
                     List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
                             .sorted(ugly)
-                            .map(map -> new LdbcShortQuery3PersonFriendsResult(resource(map, "friendId"),
+                            .map(map -> new GraknLdbcShortQuery3PersonFriendsResult(resource(map, "friendId"),
                                     resource(map, "fname"),
                                     resource(map, "lname"),
                                     resource(map, "date")))
@@ -195,7 +194,7 @@ public class GraknShortQueryHandlers {
 
                     LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
                             (String) fres.get("content").asResource().getValue(),
-                            (Long) fres.get("date").asResource().getValue()
+                            ((LocalDateTime) fres.get("date").asResource().getValue()).toEpochSecond(ZoneOffset.UTC)
                     );
 
                     resultReporter.report(0, result, operation);
@@ -260,14 +259,11 @@ public class GraknShortQueryHandlers {
             try (GraknGraph graph = session.open(GraknTxType.READ)) {
 
                 String query = "match " +
-                        "$m isa message has message-id " + operation.messageId() + "; " +
-                        "(contained: $m , container: $forum) isa container-of;" +
-                        "($forum, $fid) isa  key-forum-id; " +
-                        "($forum, $title) isa has-title; " +
+                        "$m has message-id " + operation.messageId() + "; " +
+                        "(member-message: $m , group-forum: $forum) isa forum-member;" +
+                        "$forum has forum-id $fid has title $title; " +
                         "(moderated: $forum, moderator: $mod) isa has-moderator; " +
-                        "($mod, $modid) isa key-person-id; " +
-                        "($mod, $fname) isa has-first-name; " +
-                        "($mod, $lname) isa has-last-name;";
+                        "$mod isa person has person-id $modid has first-name $fname has last-name $lname;";
 
 
                 List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
@@ -313,16 +309,16 @@ public class GraknShortQueryHandlers {
                         "(product: $comment, creator: $author2) isa has-creator; " +
                         "($author2, $pid) isa key-person-id; " +
                         "($author2, $fname) isa has-first-name; " +
-                        "($author2, $lname) isa has-last-name;";
+                        "($author2, $lname) isa has-last-name;" +
+                        "order by $date desc;";
 
                 List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
-                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "date")).reversed()
-                            .thenComparingLong(map -> resource(map, "pid"));
+                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "pid"));
 
                     List<LdbcShortQuery7MessageRepliesResult> result = results.stream()
                             .sorted(ugly)
-                            .map(map -> new LdbcShortQuery7MessageRepliesResult(resource(map, "cid"),
+                            .map(map -> new GraknLdbcShortQuery7MessageRepliesResult(resource(map, "cid"),
                                     resource(map, "content"),
                                     resource(map, "date"),
                                     resource(map, "pid"),
