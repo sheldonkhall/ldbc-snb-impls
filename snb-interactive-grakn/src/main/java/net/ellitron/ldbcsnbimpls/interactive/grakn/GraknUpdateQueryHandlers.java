@@ -7,6 +7,9 @@ import ai.grakn.graql.InsertQuery;
 import com.ldbc.driver.*;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 
 /**
  * Created by miko on 10/04/2017.
@@ -48,7 +51,7 @@ public class GraknUpdateQueryHandlers {
                         " has first-name '" + operation.personFirstName() + "' " +
                         "has last-name '" + operation.personLastName() + "' " +
                         "has birth-day " + operation.birthday().getTime() +
-                        " has creation-date " + operation.creationDate().getTime() +
+                        " has creation-date " + LocalDateTime.ofEpochSecond(operation.creationDate().getTime(), 0, ZoneOffset.UTC).toString() +
                         " has location-ip '" + operation.locationIp() + "' " +
                         "has browser-used '" + operation.browserUsed() + "' " +
                         "has gender '" + operation.gender() + "' ";
@@ -93,7 +96,7 @@ public class GraknUpdateQueryHandlers {
                 String query = "match " +
                         "$x has person-id " + operation.personId() + "; " +
                         "$y has message-id " + operation.postId() + "; " +
-                        "insert (admirer: $x, like: $y) isa likes has creation-date " + operation.creationDate().getTime() + ";";
+                        "insert (admirer: $x, like: $y) isa likes has creation-date " + LocalDateTime.ofEpochSecond(operation.creationDate().getTime(), 0, ZoneOffset.UTC).toString() + ";";
 
                 graph.graql().<InsertQuery>parse(query).execute();
                 graph.commit();
@@ -117,7 +120,7 @@ public class GraknUpdateQueryHandlers {
                 String query = "match " +
                         "$x has person-id " + operation.personId() + "; " +
                         "$y has message-id " + operation.commentId() + "; " +
-                        "insert (admirer: $x, like: $y) isa likes has creation-date " + operation.creationDate().getTime() + ";";
+                        "insert (admirer: $x, like: $y) isa likes has creation-date " + LocalDateTime.ofEpochSecond(operation.creationDate().getTime(), 0, ZoneOffset.UTC).toString() + ";";
 
                 graph.graql().<InsertQuery>parse(query).execute();
                 graph.commit();
@@ -151,7 +154,7 @@ public class GraknUpdateQueryHandlers {
 
                 String insertQ = "insert $forum isa forum has forum-id " + operation.forumId() +
                         " has title '" + operation.forumTitle() + "' " +
-                        "has creation-date " + operation.creationDate().getTime() + "; ";
+                        "has creation-date " + LocalDateTime.ofEpochSecond(operation.creationDate().getTime(), 0, ZoneOffset.UTC).toString() + "; ";
 
                 query.append(insertQ);
                 query.append("(moderator: $mod, moderated: $forum) isa has-moderator; ");
@@ -177,7 +180,7 @@ public class GraknUpdateQueryHandlers {
 
                 String query = "match $forum has forum-id " + operation.forumId() + "; " +
                         " $person has person-id " + operation.personId() + "; " +
-                        " insert (member: $person, group: $forum) isa has-member has join-date " + operation.joinDate().getTime() + ";";
+                        " insert (member: $person, group: $forum) isa has-member has join-date " + LocalDateTime.ofEpochSecond(operation.joinDate().getTime(), 0, ZoneOffset.UTC).toString() + ";";
 
                 graph.graql().<InsertQuery>parse(query.toString()).execute();
                 graph.commit();
@@ -214,7 +217,7 @@ public class GraknUpdateQueryHandlers {
                         "has browser-used '" + operation.browserUsed() + "' " +
                         "has language '" + operation.language() + "' " +
                         "has length " + operation.length() + " " +
-                        "has creation-date " + operation.creationDate().getTime() + " ";
+                        "has creation-date " + LocalDateTime.ofEpochSecond(operation.creationDate().getTime(), 0, ZoneOffset.UTC).toString() + " ";
 
                 query.append(insertQ);
                 if (operation.imageFile().length() > 0) {
@@ -267,7 +270,7 @@ public class GraknUpdateQueryHandlers {
                         "has content \"" + operation.content() + "\" " +
                         "has location-ip '" + operation.locationIp() + "' " +
                         "has browser-used '" + operation.browserUsed() + "' " +
-                        "has creation-date  " + operation.creationDate().getTime() + "  " +
+                        "has creation-date  " + LocalDateTime.ofEpochSecond(operation.creationDate().getTime(), 0, ZoneOffset.UTC).toString() + "  " +
                         "has length " + operation.length() + "; ";
 
                 query.append(insertQ);
@@ -300,7 +303,7 @@ public class GraknUpdateQueryHandlers {
 
                 String query = "match $x has person-id " + operation.person1Id() +
                         "; $y has person-id " + operation.person2Id() + ";" +
-                        "insert (friend: $x, friend: $y) isa knows has creation-date " + operation.creationDate().getTime() + ";";
+                        "insert (friend: $x, friend: $y) isa knows has creation-date " + LocalDateTime.ofEpochSecond(operation.creationDate().getTime(), 0, ZoneOffset.UTC).toString() + ";";
 
                 graph.graql().<InsertQuery>parse(query.toString()).execute();
                 graph.commit();
