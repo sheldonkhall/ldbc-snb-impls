@@ -14,6 +14,7 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,12 +59,12 @@ public class GraknShortQueryHandlers {
                             new LdbcShortQuery1PersonProfileResult(
                                     (String) fres.get("first-name").asResource().getValue(),
                                     (String) fres.get("last-name").asResource().getValue(),
-                                    ((LocalDateTime) fres.get("birth-day").asResource().getValue()).toEpochSecond(ZoneOffset.UTC),
+                                    ((LocalDateTime) fres.get("birth-day").asResource().getValue()).toInstant(ZoneOffset.UTC).toEpochMilli(),
                                     (String) fres.get("location-ip").asResource().getValue(),
                                     (String) fres.get("browser-used").asResource().getValue(),
                                     (Long) fres.get("placeID").asResource().getValue(),
                                     (String) fres.get("gender").asResource().getValue(),
-                                    ((LocalDateTime) fres.get("creation-date").asResource().getValue()).toEpochSecond(ZoneOffset.UTC));
+                                    ((LocalDateTime) fres.get("creation-date").asResource().getValue()).toInstant(ZoneOffset.UTC).toEpochMilli());
 
                     resultReporter.report(0, result, operation);
 
@@ -102,13 +103,14 @@ public class GraknShortQueryHandlers {
 
                 List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
 
-                Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "messageId")).reversed();
+                Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> map.get("date").<LocalDateTime>asResource().getValue().toInstant(ZoneOffset.UTC).toEpochMilli())
+                        .thenComparing(map -> resource(map, "messageId")).reversed();
 
                 List<LdbcShortQuery2PersonPostsResult> result = results.stream()
                         .sorted(ugly)
-                        .map(map -> new GraknLdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
+                        .map(map -> new LdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
                                 resource(map, "content"),
-                                resource(map, "date"),
+                                map.get("date").<LocalDateTime>asResource().getValue().toInstant(ZoneOffset.UTC).toEpochMilli(),
                                 resource(map, "opId"),
                                 resource(map, "authorId"),
                                 resource(map, "fname"),
@@ -142,21 +144,21 @@ public class GraknShortQueryHandlers {
                         "(friend: $person, friend: $friend) isa knows has creation-date $date; " +
                         "($friend, $friendId) isa key-person-id; " +
                         "($friend, $fname) isa has-first-name; " +
-                        "($friend, $lname) isa has-last-name;" +
-                        "order by $date desc;";
+                        "($friend, $lname) isa has-last-name;";
 
 
                 List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
 
-                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "friendId"));
+                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> map.get("date").<LocalDateTime>asResource().getValue().toInstant(ZoneOffset.UTC).toEpochMilli()).reversed()
+                            .thenComparing(map -> resource(map, "friendId"));
 
                     List<LdbcShortQuery3PersonFriendsResult> result = results.stream()
                             .sorted(ugly)
-                            .map(map -> new GraknLdbcShortQuery3PersonFriendsResult(resource(map, "friendId"),
+                            .map(map -> new LdbcShortQuery3PersonFriendsResult(resource(map, "friendId"),
                                     resource(map, "fname"),
                                     resource(map, "lname"),
-                                    resource(map, "date")))
+                                    map.get("date").<LocalDateTime>asResource().getValue().toInstant(ZoneOffset.UTC).toEpochMilli()))
                             .collect(Collectors.toList());
 
                     resultReporter.report(0, result, operation);
@@ -194,7 +196,7 @@ public class GraknShortQueryHandlers {
 
                     LdbcShortQuery4MessageContentResult result = new LdbcShortQuery4MessageContentResult(
                             (String) fres.get("content").asResource().getValue(),
-                            ((LocalDateTime) fres.get("date").asResource().getValue()).toEpochSecond(ZoneOffset.UTC)
+                            ((LocalDateTime) fres.get("date").asResource().getValue()).toInstant(ZoneOffset.UTC).toEpochMilli()
                     );
 
                     resultReporter.report(0, result, operation);
@@ -309,25 +311,25 @@ public class GraknShortQueryHandlers {
                         "(product: $comment, creator: $author2) isa has-creator; " +
                         "($author2, $pid) isa key-person-id; " +
                         "($author2, $fname) isa has-first-name; " +
-                        "($author2, $lname) isa has-last-name;" +
-                        "order by $date desc;";
+                        "($author2, $lname) isa has-last-name;";
 
                 List<Answer> results = graph.graql().<MatchQuery>parse(query).execute();
 
-                    Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> resource(map, "pid"));
+                Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> map.get("date").<LocalDateTime>asResource().getValue().toInstant(ZoneOffset.UTC).toEpochMilli()).reversed()
+                        .thenComparing(map -> resource(map, "pid"));
 
-                    List<LdbcShortQuery7MessageRepliesResult> result = results.stream()
-                            .sorted(ugly)
-                            .map(map -> new GraknLdbcShortQuery7MessageRepliesResult(resource(map, "cid"),
-                                    resource(map, "content"),
-                                    resource(map, "date"),
-                                    resource(map, "pid"),
-                                    resource(map, "fname"),
-                                    resource(map, "lname"),
-                                    checkIfFriends(conceptId(map, "author1"), conceptId(map, "author2"), graph)))
-                            .collect(Collectors.toList());
+                List<LdbcShortQuery7MessageRepliesResult> result = results.stream()
+                        .sorted(ugly)
+                        .map(map -> new LdbcShortQuery7MessageRepliesResult(resource(map, "cid"),
+                                resource(map, "content"),
+                                map.get("date").<LocalDateTime>asResource().getValue().toInstant(ZoneOffset.UTC).toEpochMilli(),
+                                resource(map, "pid"),
+                                resource(map, "fname"),
+                                resource(map, "lname"),
+                                checkIfFriends(conceptId(map, "author1"), conceptId(map, "author2"), graph)))
+                        .collect(Collectors.toList());
 
-                    resultReporter.report(0, result, operation);
+                resultReporter.report(0, result, operation);
 
             }
 
