@@ -88,29 +88,41 @@ public class GraknShortQueryHandlers {
             try (GraknGraph graph = session.open(GraknTxType.READ)) {
                 graph.showImplicitConcepts(true);
 
-                String query = "match " +
+                String messageQuery = "match " +
                         "$person isa person has person-id " + operation.personId() + "; " +
                         "(creator: $person, product: $message) isa has-creator; " +
                         "($message, $date) isa has-creation-date ; " +
                         "($message, $messageId) isa key-message-id; " +
-                        "($message, $content) isa has-content or ($message, $content) isa has-image-file; " +
-                        "$originalPost isa post; " +
-                        "(child-message: $message, parent-message: $originalPost) isa original-post; " +
-                        "($originalPost, $opId) isa key-message-id; " +
-                        "$person2 isa person; " +
-                        "(product: $originalPost, creator: $person2) isa has-creator; " +
-                        "($person2, $authorId) isa key-person-id; " +
-                        "($person2, $fname) isa has-first-name; " +
-                        "($person2, $lname) isa has-last-name; " +
                         "order by $date desc;" +
                         "limit " + String.valueOf(operation.limit()) + ";";
 
-                List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
+                List<Answer> messageResults = graph.graql().<MatchQuery>parse(messageQuery).execute();
+
+                List<Answer> allResults = new ArrayList<>();
+                messageResults.forEach(a -> {
+
+                    String query = "match " +
+                            "$message id \"" + a.get("message").getId().toString() + "\"; " +
+                            "($message, $date) isa has-creation-date ; " +
+                            "($message, $messageId) isa key-message-id; " +
+                            "($message, $content) isa has-content or ($message, $content) isa has-image-file; " +
+                            "$originalPost isa post; " +
+                            "(child-message: $message, parent-message: $originalPost) isa original-post; " +
+                            "($originalPost, $opId) isa key-message-id; " +
+                            "$person2 isa person; " +
+                            "(product: $originalPost, creator: $person2) isa has-creator; " +
+                            "($person2, $authorId) isa key-person-id; " +
+                            "($person2, $fname) isa has-first-name; " +
+                            "($person2, $lname) isa has-last-name; ";
+
+                    List<Answer> results = graph.graql().infer(true).<MatchQuery>parse(query).execute();
+                    allResults.addAll(results);
+                });
 
                 Comparator<Answer> ugly = Comparator.<Answer>comparingLong(map -> map.get("date").<LocalDateTime>asResource().getValue().toInstant(ZoneOffset.UTC).toEpochMilli())
                         .thenComparing(map -> resource(map, "messageId")).reversed();
 
-                List<LdbcShortQuery2PersonPostsResult> result = results.stream()
+                List<LdbcShortQuery2PersonPostsResult> result = allResults.stream()
                         .sorted(ugly)
                         .map(map -> new LdbcShortQuery2PersonPostsResult(resource(map, "messageId"),
                                 resource(map, "content"),
